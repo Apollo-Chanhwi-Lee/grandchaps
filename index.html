@@ -725,7 +725,7 @@ body:not(.chat-mode) #btn-back-chat { display: none; }
       </select></label>
         <button id="btn-lib-minus" title="이 곡을 작곡메이트 밴드가 연주하고 내 파트만 빼요. 보컬은 YuE2 목소리 그대로예요(내 파트가 보컬이면 목소리도 빠져요). 처음에는 목소리를 분리하느라 1분쯤 걸려요">🎧 내 파트 빼고 연습</button>
       </div>
-      <p id="lib-tempo-note" class="help">⚠ 연습 반주는 YuE2 보컬의 박을 따라가요. 그래서 곡이 진행되는 동안 템포가 조금씩 달라질 수 있어요(이번 곡은 박마다 0.49~0.51초). 메트로놈과 함께 쓰면 어긋날 수 있어요.</p>
+      <p id="lib-tempo-note" class="help">⚠ 연습 반주는 YuE2 보컬의 박을 따라가요. 그래서 곡이 진행되는 동안 템포가 조금씩 달라질 수 있어요. 메트로놈과 함께 쓰면 어긋날 수 있어요.</p>
     </div>
 </section>
 <section id="view-queue" class="view hidden" aria-label="대기열">
@@ -3712,11 +3712,30 @@ async function downloadPracticeScore() {
 }
 
 // ---------- sung demo (YuE2, runs on this Mac; optional) ----------
+let yueAvailable = null;
+function applyYueAvailability(st) {
+  if (!st || typeof st.available !== "boolean") return;
+  yueAvailable = st.available;
+  for (const id of ["yuesong-on", "btn-yuesong", "btn-yuesong-yes", "btn-yue", "btn-song-overlay"]) {
+    const el = $(id);
+    if (el) { el.disabled = !st.available || yueBusy; el.title = st.available ? "" : st.reason || "YuE2를 쓸 수 없어요"; }
+  }
+  if (!yueBusy && $("yuesong-status")) $("yuesong-status").textContent = st.available ? "" : st.reason || "YuE2를 쓸 수 없어요";
+}
+function showPracticeTiming(timing) {
+  const el = $("lib-tempo-note");
+  if (!el) return;
+  const measured = timing && Number.isFinite(timing.min_s) && Number.isFinite(timing.max_s) && timing.min_s > 0 && timing.max_s >= timing.min_s;
+  el.textContent = "⚠ 연습 반주는 YuE2 보컬의 박을 따라가요. 그래서 곡이 진행되는 동안 템포가 조금씩 달라질 수 있어요"
+    + (measured ? ` (이번 곡은 박마다 ${timing.min_s.toFixed(3)}~${timing.max_s.toFixed(3)}초)` : "")
+    + ". 메트로놈과 함께 쓰면 어긋날 수 있어요.";
+}
 async function loadYueStatus() {
   try {
     const res = await fetch("/api/yue/status");
     if (!res.ok) return;
     const st = await res.json();
+    applyYueAvailability(st);
     const sel = $("yue-style");
     sel.textContent = "";
     for (const x of st.styles) {
@@ -3874,6 +3893,7 @@ function showQueue() {
 // `first`: the finished first part ({ abc, library_id, genre, title }) when the user said yes to the whole song; its genre
 // and title are the ones it was made with, so the whole song needs no song on screen.
 async function makeYueSong(first = null) {
+  if (yueAvailable === false) return false;
   const song = state.song;
   if (!first && !song) return;
   if (!first && !song.leadsheet) return showError("이 곡은 리드시트로 내보낼 수 없어 YuE2에 넘길 수 없어요."), false;
@@ -3970,7 +3990,7 @@ async function makeYueSong(first = null) {
     }
     return false;                                            // true when the take was made (the conversation says when it was not)
   } finally {
-    if (seq === yueSongSeq) { button.disabled = false; yueBusy = false; yueRunning = null; showYueCancel(false); }
+    if (seq === yueSongSeq) { button.disabled = yueAvailable === false; yueBusy = false; yueRunning = null; showYueCancel(false); }
   }
 }
 // A short rise into view (CSS .rise, only without reduced motion); taken off and put back so it plays again.
@@ -4076,6 +4096,7 @@ function markMyPart() {
 }
 let libSong = null;
 function openLibrarySong(s) {
+  showPracticeTiming(null);
   libOpen = s.id;
   libSong = s;
   $("btn-lib-full")?.classList.toggle("hidden", s.stage !== "first");     // a first part can be taken on to the whole song
@@ -4568,6 +4589,7 @@ async function runCompose(path, body, message) {
 // starts one take; nothing starts while another is being made, with the feature off, or for a song that came from YuE2.
 let yueAutoSong = null;
 function autoYueSong(inChat = false) {
+  if (yueAvailable === false) return false;
   const song = state.song;
   if (!song?.leadsheet || song === yueAutoSong || yueBusy || song.yue_song || !$("yuesong-on")?.checked) return false;
   yueAutoSong = song;
@@ -5273,6 +5295,9 @@ function init() {
         try {
           const res = await fetch(`/api/yue/library/${libOpen}/minus?part=${part}`);
           if (!res.ok) throw new Error((await res.json()).detail || `실패 (${res.status})`);
+          let timing = null;
+          try { timing = JSON.parse(decodeURIComponent(res.headers.get("X-Instmate-Practice") || "{}"))?.beat_timing; } catch (_) { /* older servers have no measurements */ }
+          showPracticeTiming(timing);
           $("lib-audio").src = URL.createObjectURL(await res.blob());
           $("lib-audio").play?.();
         } catch (e) { showError("내 파트 빼고 연습: " + e.message); }
@@ -5373,5 +5398,6 @@ function init() {
   focusPageTop();
 }
 init();
+if (typeof window !== "undefined") applyYueAvailability(window.INSTMATE_YUE_STATUS);
 </script>
 <script>window.__demoOffline();</script>
