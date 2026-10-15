@@ -1536,7 +1536,7 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
             </select></label>
           </div>
           <input type="text" id="yuesong-title" maxlength="80" placeholder="곡 제목 (라이브러리에 이 이름으로 저장돼요)" aria-label="곡 제목">
-          <label class="row"><input type="checkbox" id="yuesong-random"> 랜덤 가사: YuE2가 가사를 알아서 지어요 (끄면 아래 가사를 쓰고, 가사가 없으면 '아'로 불러요)</label>
+          <label class="row"><input type="checkbox" id="yuesong-random" checked> 랜덤 가사: YuE2가 가사를 알아서 지어요 (끄면 아래 가사를 쓰고, 가사가 없으면 '아'로 불러요)</label>
           <textarea id="yuesong-lyrics" rows="4" maxlength="4000" aria-label="가사" placeholder="가사 (비워 두면 '아'로 불러요)&#10;[Verse]&#10;첫 줄 가사&#10;[Chorus]&#10;후렴 가사"></textarea>
           <div class="row" role="group" aria-label="파트 더하기">
             <b>파트 더하기</b>
@@ -1581,7 +1581,7 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
         </div>
       </div>
     </div>
-    <details id="yue-other" class="more">
+    <details id="yue-other" class="more" hidden>
       <summary>다른 AI 보컬 방식 (하이라이트 얹기, YuE2 데모)</summary>
       <div class="btn-grid">
         <button id="btn-song-overlay" class="primary" title="AI 가수(YuE2)의 목소리를 이 곡의 반주에 얹어 하이라이트(벌스~첫 후렴, 약 1분)를 들려줘요. 약 18GB 메모리를 쓰고 2~3분 걸려요. 원래 조보다 5키 낮고 멜로디는 줄여서 불러요.">🎤 AI 보컬로 하이라이트 듣기 (2~3분)</button>
@@ -4241,7 +4241,7 @@ async function makeYueSong(first = null) {
         const parts = st.info.sections.map(([name, bars]) => `${name} ${bars}마디`).join(" → ");
         $("yuesong-note").textContent = `YuE2가 쓴 악보: ${parts}.`      // a job without given bars (the whole song) skips that sentence
           + (st.info.given_bars != null ? ` 처음 ${st.info.given_bars}마디가 내 마디예요` + (st.info.given_kept ? " (그대로 들어갔어요)." : ".") : "")
-          + (st.info.lyrics === "ah" ? " 가사 없이 '아'로 불렀어요." : st.info.lyrics === "model" ? " YuE2가 지은 가사로 불렀어요." : "")
+          + (st.info.lyrics === "ah" ? " 가사 없이 '아'로 불렀어요." : st.info.lyrics === "model" ? " 랜덤 가사 모드로 요청했어요. 실제 가사는 음원에서 확인해 주세요." : "")
           + (repaired ? ` AI가 새로 쓴 ${repaired}마디의 쉼표 길이를 박자에 맞췄어요. 입력 악보는 보존했어요.` : "")
           + (st.info.warning ? " " + st.info.warning : "");
         $("yuesong-result").classList.remove("hidden");
@@ -4250,7 +4250,7 @@ async function makeYueSong(first = null) {
         const sung = $("yuesong-lyrics-view");                  // the words the take was sung with
         if (sung) {
           sung.textContent = st.info.lyrics === "ah" ? "가사 없이 '아'로 불렀어요."
-            : st.info.lyrics === "model" ? "YuE2가 가사를 지어 불렀어요. 가사는 곡에서 들어 보세요." : ($("yuesong-lyrics")?.value || "").trim();
+            : st.info.lyrics === "model" ? "랜덤 가사 모드로 요청했어요. 실제 가사는 음원에서 확인해 주세요." : ($("yuesong-lyrics")?.value || "").trim();
           sung.classList.toggle("hidden", !sung.textContent);
         }
         riseIn($("yuesong-result"));
@@ -5707,6 +5707,7 @@ function init() {
     }
     if ($("btn-go-practice")) $("btn-go-practice").onclick = () => { setView("practice"); focusPageTop?.(); };
     if ($("yuesong-random")) $("yuesong-random").onchange = syncRandomLyrics;
+    syncRandomLyrics();
     if ($("btn-yuesong-cancel")) $("btn-yuesong-cancel").onclick = cancelYue;
     if ($("btn-yuesong-redo")) $("btn-yuesong-redo").onclick = redoYue;
     if ($("btn-song-ai")) $("btn-song-ai").onclick = playAiVocal;
