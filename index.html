@@ -4180,7 +4180,7 @@ function showQueue() {
 // `first`: the finished first part ({ abc, library_id, genre, title }) when the user said yes to the whole song; its genre
 // and title are the ones it was made with, so the whole song needs no song on screen.
 async function makeYueSong(first = null) {
-  if (yueAvailable === false) return false;
+  if (yueAvailable === false) return showError(yueReason || "YuE2를 쓸 수 없어요."), false;
   const song = state.song;
   if (!first && !song) return;
   if (!first && !song.leadsheet) return showError("이 곡은 리드시트로 내보낼 수 없어 YuE2에 넘길 수 없어요."), false;
@@ -4280,7 +4280,12 @@ async function makeYueSong(first = null) {
     }
     return false;                                            // true when the take was made (the conversation says when it was not)
   } finally {
-    if (seq === yueSongSeq) { button.disabled = yueAvailable === false; yueBusy = false; yueRunning = null; showYueCancel(false); }
+    if (seq === yueSongSeq) {
+      for (const id of ["yuesong-on", "btn-yuesong", "btn-yuesong-yes", "btn-yue", "btn-song-overlay"]) {
+        if ($(id)) $(id).disabled = yueAvailable === false;
+      }
+      yueBusy = false; yueRunning = null; showYueCancel(false);
+    }
   }
 }
 // A short rise into view (CSS .rise, only without reduced motion); taken off and put back so it plays again.
@@ -5673,7 +5678,10 @@ function init() {
       if ($("yuesong-ins")) $("yuesong-ins").onchange = syncYueSections;
       if ($("btn-yuesong-sections-reset")) $("btn-yuesong-sections-reset").onclick = () => { yueSecs.touched = false; syncYueSections(); };
       $("btn-yuesong-adopt").onclick = adoptYueSong;
-      $("btn-yuesong-yes").onclick = () => { if (yueSongFirst) makeYueSong(yueSongFirst); };
+      $("btn-yuesong-yes").onclick = () => {
+        if (!yueSongFirst?.abc || !yueSongFirst?.library_id) return showError("완성된 1절 정보를 찾을 수 없어요. '내 곡'에서 저장된 1절을 열고 '이 1절로 전곡 만들기'를 눌러 주세요.");
+        return makeYueSong(yueSongFirst);
+      };
       $("btn-yuesong-no").onclick = () => $("yuesong-ask").classList.add("hidden");
     }
     for (const a of $("views")?.querySelectorAll?.("a") || []) a.onclick = (e) => { e.preventDefault?.(); setView(a.dataset.view); };
