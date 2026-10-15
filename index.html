@@ -850,6 +850,12 @@ body.workspace-app[data-workspace-page="input"] #workspace-chat-toggle { display
 
 body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height: 0; overflow: auto; }
 
+/* Keep the sidebar inside the banner-adjusted app height; autofocus must not scroll the logo under the notice. */
+@media (min-width: 701px) {
+ body.workspace-app .side { height: 100%; min-height: 0; }
+ body.workspace-app .brand-main { font-size: 18px; white-space: nowrap; }
+}
+
 .demo-banner { position: relative; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 16px;
   background: #101a33; color: #cfe3ff; font-size: 13px; line-height: 1.5; border-bottom: 1px solid #2c3a63; }
 .demo-banner b { color: #9BE15D; }
