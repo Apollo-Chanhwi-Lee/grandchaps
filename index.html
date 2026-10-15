@@ -889,7 +889,6 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
   <p class="workspace-eyebrow">YOUR MELODY, OUR WORKSPACE</p>
   <h1>어떤 곡을 만들까요?</h1>
   <p>흥얼거린 멜로디와 원하는 느낌만 알려 주세요. 세부 설정은 도우미에게 맡겨도 됩니다.</p>
-  <div class="workspace-starts"><button type="button" data-workspace-start="hum">허밍으로 시작</button><button type="button" data-workspace-start="score">내 악보로 시작</button><button type="button" data-workspace-start="talk">느낌을 말해 주세요</button></div>
   <div id="workspace-seed-summary" class="workspace-seed-summary">멜로디를 아직 넣지 않았어요.</div>
   <div class="workspace-starts"><button type="button" id="workspace-listen" disabled>입력 멜로디 듣기</button><button type="button" data-workspace-open="advanced">음표 직접 고치기</button></div>
 </section>
@@ -1011,6 +1010,7 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
       </div>
       <div id="import-box" class="hidden">
         <p id="import-summary"></p>
+        <button id="workspace-score-talk" type="button" data-start-go="talk">대화로 돌아가기</button>
         <p class="help">아래는 앱이 읽은 멜로디예요(코드는 아직 없어요).</p>
 <details class="more"><summary>자세히</summary><p>올린 악보와 같은지 확인해 주세요.</p></details>
         <div id="import-sheet" class="input-sheet"></div>
@@ -1074,6 +1074,7 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
 
   <section class="card" id="hum-card" data-step="1" data-start="hum">
     <h2>허밍·녹음으로 멜로디 넣기</h2>
+    <button id="workspace-hum-talk" type="button" data-start-go="talk">대화로 돌아가기</button>
     <p class="help">흥얼거리거나 '라라라'로 부르면 멜로디를 숫자 악보로 받아 적어요. 받아 적은 멜로디는 먼저 보여 드리고, "이 멜로디 쓰기"를 눌러야 입력에 들어가요.</p>
     <div class="row">
       <button id="btn-hum" class="primary" title="최대 60초예요. 한 번 더 누르면 멈춰요">🎤 녹음해서 넣기</button>
@@ -1622,6 +1623,7 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
 <p id="workspace-connection" class="help" role="status">언어 모델 연결 확인 중</p>
 <ol id="chat-log" class="chat-log" aria-live="polite"></ol>
   <div id="chat-choices" class="row chat-choices hidden" role="group" aria-label="답 고르기"></div>
+  <div class="row"><button type="button" data-workspace-start="hum">허밍·녹음</button></div>
   <form id="chat-form" class="row">
     <label class="filebtn workspace-attach">악보 첨부<input type="file" id="chat-file" accept=".mid,.midi,.musicxml,.mxl,.xml,.pdf" aria-label="악보 파일 붙이기"></label><span id="workspace-file-name" class="help" aria-live="polite"></span>
     <input id="chat-text" maxlength="1000" placeholder="예: 이 멜로디로 감성록 곡 만들어줘, 여성 보컬" style="flex:1; min-width:220px" aria-label="요청">
@@ -2905,6 +2907,7 @@ function barNoteLines(score, maxBars = 64) {
 // true when the score may be used: it is exact, or the user accepted the converted version (else says what to do)
 function scoreAccepted(prefix, score) {
   if (!score || score.exact !== false || $(`${prefix}-accept`)?.checked) return true;
+  if (prefix === "import") setStart("score");
   if (currentStep() !== 1) goStep(1);
   showError("이 악보는 그대로 가져올 수 없어 달라지는 곳이 있어요. 목록을 확인하고 \"이 변환본으로 진행할게요\"에 표시해 주세요.");
   $(`${prefix}-changes`)?.scrollIntoView?.({ block: "center", behavior: "instant" });
@@ -5211,6 +5214,7 @@ async function chatTurn(text, score, event, attached = false) {
     find_sections: !!$("chat-find-sections")?.checked });
   chatSession = r.session;
   if (score && score === importedScore) chatMainScore = score;
+  if (importedScore && chatMainScore === importedScore && chatSession?.consent) $("import-accept").checked = true;
   const said = (r.understood || []).length ? "이해한 것 · " + r.understood.join(" · ") : "";
   if (said && said !== chatUnderstood) chatSay("understood", said);     // what the rules took; once per message, not per request
   if (said) chatUnderstood = said;
