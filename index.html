@@ -774,6 +774,8 @@ body.workspace-app .side { overflow: auto; }
 body.workspace-app .content { height: 100%; min-height: 0; padding: 20px 28px; display: flex; flex-direction: column; overflow: hidden; }
 .workspace-pages { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0 0 16px; padding: 0; list-style: none; color: var(--fg-muted); font-size: 13px; }
 .workspace-pages [aria-current="step"] { color: var(--seed); font-weight: 700; }
+#workspace-section-heading:not(.hidden) { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+#workspace-description { flex-basis: 100%; order: 1; }
 body[data-workspace-page="auxiliary"] .workspace-pages { display: none; }
 .workspace-welcome { margin-bottom: 12px; }
 .workspace-welcome h1 { margin-top: 0; }
@@ -797,6 +799,9 @@ body.workspace-app .filebtn { position: relative; padding: 12px; border: 1px sol
 body.workspace-app .filebtn:focus-within { outline: 2px solid var(--seed); outline-offset: 2px; }
 body.workspace-app .filebtn input { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; opacity: 0; cursor: pointer; }
 body.workspace-app #chat-file { width: 100%; }
+.workspace-input-tools { grid-column: 1 / -1; gap: 8px; margin: 0; }
+.workspace-input-tools #workspace-file-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-input-tools #workspace-file-name:empty { display: none; }
 body.workspace-app #chat-text { grid-column: 1; min-height: 44px; }
 body.workspace-app #chat-send { grid-column: 2; }
 .workspace-tools { margin: 12px 0; }
@@ -810,8 +815,10 @@ body.workspace-app:not([data-workspace-page="input"]) #workspace-create { displa
 body.workspace-app[data-workspace-page="settings"] #steps > [data-step] { display: none !important; }
 body.workspace-app[data-workspace-page="settings"] #steps > #workspace-style-settings { display: block !important; }
 body.workspace-app[data-workspace-page="input"] #steps > #workspace-style-settings { display: none !important; }
-body.workspace-app[data-workspace-page="result"] #steps > [data-step="2"] { display: none !important; }
-body.workspace-app[data-workspace-page="make"] #steps > [data-step="3"] { display: none !important; }
+body.workspace-app[data-workspace-page="result"] #steps > [data-step="2"]:not(.hidden) { display: none !important; }
+body.workspace-app[data-workspace-page="make"] #steps > [data-step="3"]:not(.hidden) { display: none !important; }
+body.workspace-app:not([data-workspace-page="result"]) #steps > #workspace-result-tabs { display: none !important; }
+body.workspace-app[data-workspace-page="result"] #btn-step-next { display: none; }
 body.workspace-app[data-workspace-page="make"] #steps > #song:not(.hidden),
 body.workspace-app[data-workspace-page="make"] #steps > #yue2-card:not(.hidden) { display: block !important; }
 body.workspace-app[data-workspace-page="make"] #song > :not(h2):not(#song-cover):not(#song-route):not(#song-about):not(.workspace-playback) { display: none !important; }
@@ -850,9 +857,31 @@ body.workspace-app[data-workspace-page="input"] #workspace-chat-toggle { display
 
 body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height: 0; overflow: auto; }
 
+@media (max-height: 650px) {
+ body.workspace-app .content { padding: 10px 18px; }
+ body.workspace-app .side { justify-content: flex-start; gap: 10px; padding: 10px 8px; }
+ body.workspace-app .side nav a { min-height: 36px; padding: 8px; font-size: 13px; }
+ body.workspace-app .side-lib, body.workspace-app .side-note,
+ body.workspace-app .workspace-accessibility, body.workspace-app .workspace-legacy-nav { display: none; }
+ .workspace-pages { margin-bottom: 8px; font-size: 11px; }
+ .workspace-welcome h1, .workspace-heading h1 { font-size: 22px; margin: 0 0 8px; }
+ .workspace-welcome > p, .workspace-welcome .workspace-starts, .workspace-seed-summary,
+ .workspace-heading p, #workspace-changes, #step-hint { display: none !important; }
+ body[data-workspace-page="input"] #btn-step-prev { display: none; }
+ body.workspace-app #step-nav { flex: none; padding: 8px 0; margin-top: 8px; }
+ body.workspace-app #chat-form { margin: 6px 0; }
+ body.workspace-app #chat-log { margin: 6px 0; }
+ #workspace-edit-settings { align-self: flex-end; min-height: 32px; padding: 6px 12px; }
+ body.workspace-app .card { padding: 12px; margin: 8px 0; }
+ body.workspace-app[data-workspace-page="make"][data-has-song="true"] #steps > #song { display: none !important; }
+ body.workspace-app #make-card > h2, #practice-card > h2,
+ #practice-box[open] > summary, #practice-box > p.help { display: none; }
+}
+
 /* Keep the sidebar inside the banner-adjusted app height; autofocus must not scroll the logo under the notice. */
 @media (min-width: 701px) {
- body.workspace-app .side { height: 100%; min-height: 0; }
+ body.workspace-app .side { height: 100%; min-height: 0; flex-direction: column; align-items: stretch; }
+ body.workspace-app #views { flex-direction: column; flex: none; width: 100%; }
  body.workspace-app .brand-main { font-size: 18px; white-space: nowrap; }
 }
 
@@ -1236,6 +1265,7 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
 
   <section class="card" id="make-card" data-step="2">
     <h2>만들기</h2>
+    <details id="workspace-compose-controls" open><summary>편곡 만들기·다시 만들기</summary>
     <p class="help">입력한 멜로디로 만들어요.</p>
 <details class="more"><summary>자세히</summary><p>"반주 만들기"는 입력한 마디에 코드와 반주를 붙이고, "곡 완성"은 2~4분 곡으로 늘려요.
       악보를 올렸다면 여기서 악보에 맞는 만들기 방법이 나와요.</p></details>
@@ -1255,9 +1285,10 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
       <button id="btn-generate" class="primary">반주 만들기</button>
       <button id="btn-compose" class="primary">곡 완성 (AI)</button>
     </div>
+    </details>
     <p id="make-busy" class="make-busy hidden" role="status"><span class="spinner" aria-hidden="true"></span> 만드는 중이에요. 이 화면에서 작곡 결과와 YuE2 진행을 확인해 주세요.</p>
     <p id="compose-status" class="help" aria-live="polite"></p>
-    <ol id="compose-progress" class="trace hidden" aria-label="곡 만드는 과정"></ol>
+    <details class="more"><summary>작곡 과정</summary><ol id="compose-progress" class="trace hidden" aria-label="곡 만드는 과정"></ol></details>
     <div id="ask" class="ask hidden"></div>
   </section>
 
@@ -1584,6 +1615,7 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
         악보에서 고칠 곳이 보이면 "이 악보 고치기"로 음을 고치고, 적용하면 악보가 다시 그려져요.</p></details>
       <div class="row">
         <label>내 악기 <select id="practice-part"></select></label>
+        <button id="btn-practice-score" class="primary">악보 보기</button>
         <label>구간 <select id="practice-section"></select></label>
         <label>빠르기
           <select id="practice-speed">
@@ -1594,7 +1626,6 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
         <label><input type="checkbox" id="practice-count" checked> 시작 전 한 마디 세기</label>
       </div>
       <div class="row">
-        <button id="btn-practice-score" class="primary">악보 보기</button>
         <button id="btn-practice-solo">이 파트만 듣기</button>
         <button id="btn-practice-minus">이 파트 빼고 듣기 (내가 연주)</button>
         <button id="btn-practice-all">전체 듣기</button>
@@ -1643,9 +1674,8 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
 <p id="workspace-connection" class="help" role="status">언어 모델 연결 확인 중</p>
 <ol id="chat-log" class="chat-log" aria-live="polite"></ol>
   <div id="chat-choices" class="row chat-choices hidden" role="group" aria-label="답 고르기"></div>
-  <div class="row"><button type="button" data-workspace-start="hum">허밍·녹음</button></div>
   <form id="chat-form" class="row">
-    <label class="filebtn workspace-attach">악보 첨부<input type="file" id="chat-file" accept=".mid,.midi,.musicxml,.mxl,.xml,.pdf" aria-label="악보 파일 붙이기"></label><span id="workspace-file-name" class="help" aria-live="polite"></span>
+    <div class="row workspace-input-tools"><label class="filebtn workspace-attach">악보 첨부<input type="file" id="chat-file" accept=".mid,.midi,.musicxml,.mxl,.xml,.pdf" aria-label="악보 파일 붙이기"></label><button type="button" data-workspace-start="hum">허밍·녹음</button><span id="workspace-file-name" class="help" aria-live="polite"></span></div>
     <input id="chat-text" maxlength="1000" placeholder="예: 이 멜로디로 감성록 곡 만들어줘, 여성 보컬" style="flex:1; min-width:220px" aria-label="요청">
     <button id="chat-send" class="primary" type="submit">보내기</button>
   </form>
@@ -5898,6 +5928,7 @@ if (typeof document !== 'undefined') {
       if (open) byId('chat-text').focus();
     }
     byId('workspace-dialogue').append(byId('assistant-dock'));
+    byId('workspace-section-heading').append(byId('workspace-edit-settings'));
     byId('workspace-dialogue-close').onclick = () => openDock(false);
     byId('workspace-assistant-dialog').addEventListener('close', () => {
       byId('workspace-dialogue').append(byId('assistant-dock'));
@@ -5909,6 +5940,10 @@ if (typeof document !== 'undefined') {
     function setPage(page) {
       if (page === 'settings') page = 'input';
       document.body.dataset.workspacePage = page;
+      document.body.dataset.hasSong = String(Boolean(state.song));
+      if (document.body.dataset.workspaceView === 'studio') {
+        byId('workspace-title').textContent = page === 'result' ? '악보·파트 연습' : '작곡·곡 완성';
+      }
       byId('workspace-edit-settings').classList.toggle('hidden', !['make', 'result'].includes(page));
       for (const item of byId('workspace-pages').children) {
         if (item.dataset.page === page) item.setAttribute('aria-current', 'step'); else item.removeAttribute('aria-current');
@@ -5925,7 +5960,7 @@ if (typeof document !== 'undefined') {
     }
     function setResultPanel(panel) {
       document.body.dataset.resultPanel = panel;
-      document.querySelectorAll('[data-result-panel]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.resultPanel === panel)));
+      document.querySelectorAll('button[data-result-panel]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.resultPanel === panel)));
     }
     const titles = {
       studio: ['작업실', '만들기와 결과 확인을 한곳에서. 바꾸고 싶은 것은 도우미에게 말해 주세요.'],
@@ -5956,6 +5991,7 @@ if (typeof document !== 'undefined') {
     // The original controllers still own generation; navigation follows their completed stage.
     goStep = function (n, hint = '') {
       oldGoStep(n, hint);
+      if (Number(n) >= 2) byId('workspace-compose-controls').open = Number(n) === 2;
       chooseView(Number(n) >= 2 ? 'studio' : 'create');
       if (Number(n) >= 3) setPage('make');
     };
@@ -5974,7 +6010,7 @@ if (typeof document !== 'undefined') {
       if (page === 'make' && next === 'result') {
         if (yueBusy || state.composing) return showError('생성이 끝난 뒤 악보·연습으로 이동해 주세요.');
         if (yueSongResult && yueSongSource === state.song) adoptYueSong();
-        oldGoStep(3); chooseView('studio'); setPage('result'); setResultPanel('song'); return;
+        oldGoStep(3); chooseView('studio'); setPage('result'); setResultPanel('practice'); return;
       }
       if (page === 'input') { say('먼저 악보를 첨부하거나 허밍으로 멜로디를 넣어 주세요.'); return; }
       oldNextStep();
@@ -6059,7 +6095,7 @@ if (typeof document !== 'undefined') {
     byId('workspace-mode-create').onclick = () => setCommandMode('create');
     byId('workspace-mode-settings').onclick = () => setCommandMode('settings');
     byId('workspace-chat-toggle').onclick = () => openDock(!byId('workspace-assistant-dialog').open);
-    document.querySelectorAll('[data-result-panel]').forEach(b => b.onclick = () => setResultPanel(b.dataset.resultPanel));
+    document.querySelectorAll('button[data-result-panel]').forEach(b => b.onclick = () => setResultPanel(b.dataset.resultPanel));
     byId('chat-file').addEventListener('change', () => { byId('workspace-file-name').textContent = byId('chat-file').files[0]?.name || ''; });
     byId('workspace-listen').onclick = () => playMelodyOnly();
     byId('workspace-rebuild').textContent = '만들기 화면 열기';
