@@ -769,7 +769,10 @@ body.workspace-app #chat-options { font-size: 12px; }
 
 /* One creation page at a time; existing controls keep their state and handlers. */
 body.workspace-app { overflow: hidden; }
-body.workspace-app .app { grid-template-columns: 160px minmax(0,1fr); height: calc(100dvh - var(--public-notice-height,0px)); min-height: 0; }
+body.workspace-app .app { grid-template-columns: 160px minmax(0,1fr); height: calc(100dvh - var(--public-notice-height,0px) - var(--playback-height,0px)); min-height: 0; }
+body.workspace-app .libbar, body.workspace-app .playerbar { left: 160px; }
+body.workspace-app .libbar { max-height: 35dvh; overflow: auto; }
+@media (max-width:700px) { body.workspace-app .libbar, body.workspace-app .playerbar { left: 0; } }
 body.workspace-app .side { overflow: auto; }
 body.workspace-app .content { height: 100%; min-height: 0; padding: 20px 28px; display: flex; flex-direction: column; overflow: hidden; }
 .workspace-pages { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0 0 16px; padding: 0; list-style: none; color: var(--fg-muted); font-size: 13px; }
@@ -4261,7 +4264,7 @@ async function makeYueSong(first = null, play = true) {
         $("yuesong-ask").classList.toggle("hidden", !ask || !play);
         if (ask) $("yuesong-ask").scrollIntoView?.({ block: "nearest" });
         loadLibrary();
-        status.textContent = `${st.info.stage === "first" ? "1절 완성" : "완성"} (${Math.round(st.info.seconds)}초 분량, ${Math.round(st.info.elapsed_sec)}초 걸림)`;
+        status.textContent = `${st.info.length_met === false ? "목표 길이 미달 · 짧은 결과 저장됨" : st.info.stage === "first" ? "1절 완성" : "완성"} (${Math.round(st.info.seconds)}초 분량, ${Math.round(st.info.elapsed_sec)}초 걸림)`;
         yueQueue = { now: "", line: "", last: `${what} · ${status.textContent}` };
         showQueue();
         return true;
@@ -4332,7 +4335,7 @@ async function loadLibrary() {
     const len = `${Math.floor(s.seconds / 60)}:${String(Math.round(s.seconds % 60)).padStart(2, "0")}`;
     b.textContent = s.title;
     const small = document.createElement("small");
-    small.textContent = `${s.stage === "first" ? "1절" : s.stage === "full" ? "전곡" : "곡"} · ${len} · ${s.created}`;
+    small.textContent = `${s.length_met === false ? "목표 길이 미달" : s.stage === "first" ? "1절" : s.stage === "full" ? "전곡" : "곡"} · ${len} · ${s.created}`;
     b.append(small);
     b.classList.toggle("on", libOpen === s.id);
     b.onclick = () => openLibrarySong(s);
@@ -4345,7 +4348,7 @@ async function loadLibrary() {
     for (const s of songs) {
       const li = document.createElement("li"), b = document.createElement("button"), small = document.createElement("small");
       b.textContent = s.title;
-      small.textContent = [s.stage === "first" ? "1절" : s.stage === "full" ? "전곡" : "곡",
+      small.textContent = [s.length_met === false ? "목표 길이 미달" : s.stage === "first" ? "1절" : s.stage === "full" ? "전곡" : "곡",
         `${Math.floor(s.seconds / 60)}:${String(Math.round(s.seconds % 60)).padStart(2, "0")}`, s.created].filter(Boolean).join(" · ");
       b.append(small);
       b.classList.toggle("on", libOpen === s.id);
@@ -4360,7 +4363,7 @@ async function loadLibrary() {
   for (const s of songs) {
     const li = document.createElement("li"), b = document.createElement("button"), small = document.createElement("small");
     b.textContent = s.title;
-    small.textContent = [s.stage === "first" ? "1절" : s.stage === "full" ? "전곡" : "곡",
+    small.textContent = [s.length_met === false ? "목표 길이 미달" : s.stage === "first" ? "1절" : s.stage === "full" ? "전곡" : "곡",
       `${Math.floor(s.seconds / 60)}:${String(Math.round(s.seconds % 60)).padStart(2, "0")}`,
       s.key, s.tempo ? `${s.tempo} BPM` : "", s.created].filter(Boolean).join(" · ");   // a missing key or tempo is left out
     b.append(small);
@@ -4398,7 +4401,7 @@ function openLibrarySong(s) {
   libFullFirst = null;                                       // a question asked for another song is gone
   $("lib-full-ask")?.classList.add("hidden");
   if ($("lib-full-note")) $("lib-full-note").textContent = "";
-  if ($("practice-song-now")) $("practice-song-now").textContent = `연습할 곡: ${s.title} (${s.stage === "first" ? "1절" : s.stage === "full" ? "전곡" : "곡"}). 아래에서 내 파트를 고르세요.`;
+  if ($("practice-song-now")) $("practice-song-now").textContent = `연습할 곡: ${s.title} (${s.length_met === false ? "목표 길이 미달" : s.stage === "first" ? "1절" : s.stage === "full" ? "전곡" : "곡"}). 아래에서 내 파트를 고르세요.`;
   stopPlayback();
   for (const id of ["yuesong-audio", "yue-audio"]) $(id)?.pause?.();   // one sound at a time: the other takes stop
   $("lib-title").textContent = s.title;
@@ -4962,7 +4965,7 @@ async function completeYueSong(song) {
     if (!current() || !yueSongResult?.leadsheet) return;
     adoptYueSong();
     window.workspaceController.openYue();
-    $("yuesong-status").textContent += " · 음원과 악보 준비됨";
+    $("yuesong-status").textContent += yueSongResult.yue_song?.length_met === false ? " · 목표 길이에 미달한 음원과 악보예요" : " · 음원과 악보 준비됨";
   } finally { $("btn-yuesong-adopt").disabled = false; }
 }
 function autoYueSong(inChat = false) {
@@ -6206,6 +6209,15 @@ if (typeof document !== 'undefined') {
     }).observe(byId('yuesong-status'), { childList: true });
     const banner = byId('public-demo-banner');
     if (banner) new ResizeObserver(() => document.body.style.setProperty('--public-notice-height', banner.getBoundingClientRect().height + 'px')).observe(banner);
+    const playbackBars = [byId('libbar'), byId('playerbar')];
+    const fitPlayback = () => {
+      const playerHeight = playbackBars[1].getBoundingClientRect().height;
+      playbackBars[0].style.bottom = playerHeight + 'px';
+      document.body.style.setProperty('--playback-height', (playerHeight + playbackBars[0].getBoundingClientRect().height) + 'px');
+    };
+    const playbackObserver = new ResizeObserver(fitPlayback);
+    playbackBars.forEach(bar => playbackObserver.observe(bar));
+    fitPlayback();
     renderSeedSummary(); renderVoiceButtons(); refreshStatus();
     window.workspaceController = { editor, readSettings: read, context, setView: chooseView, request, setCommandMode, refreshStatus,
       openYue() { chooseView('studio'); oldGoStep(3); setPage('result'); setResultPanel('yue'); } };
