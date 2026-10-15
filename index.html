@@ -821,7 +821,7 @@ body.workspace-app[data-workspace-page="input"] #steps > #workspace-style-settin
 body.workspace-app[data-workspace-page="result"] #steps > [data-step="2"]:not(.hidden) { display: none !important; }
 body.workspace-app[data-workspace-page="make"] #steps > [data-step="3"]:not(.hidden) { display: none !important; }
 body.workspace-app:not([data-workspace-page="result"]) #steps > #workspace-result-tabs { display: none !important; }
-body.workspace-app[data-workspace-page="result"] #btn-step-next { display: none; }
+body.workspace-app[data-workspace-page="result"]:not([data-result-panel="yue"]) #btn-step-next { display: none; }
 body.workspace-app[data-workspace-page="make"] #steps > #song:not(.hidden),
 body.workspace-app[data-workspace-page="make"] #steps > #yue2-card:not(.hidden) { display: block !important; }
 body.workspace-app[data-workspace-page="make"] #song > :not(h2):not(#song-cover):not(#song-route):not(#song-about):not(.workspace-playback) { display: none !important; }
@@ -5998,13 +5998,14 @@ if (typeof document !== 'undefined') {
       renderRequestSummary();
       byId('btn-step-prev').disabled = page === 'input';
       byId('btn-step-next').textContent = page === 'input' ? '확인하고 만들기로 →' : '악보·연습으로 →';
-      byId('btn-step-next').disabled = page === 'result';
+      byId('btn-step-next').disabled = page === 'result' && document.body.dataset.resultPanel !== 'yue';
       byId('btn-step-next').classList.toggle('hidden', page === 'make' && !state.song && !state.result);
       if (pageChanged) byId('steps').scrollTop = 0;
       if (page !== 'input') openDock(false);
     }
     function setResultPanel(panel) {
       document.body.dataset.resultPanel = panel;
+      if (document.body.dataset.workspacePage === 'result') byId('btn-step-next').disabled = panel !== 'yue';
       if (document.body.dataset.workspacePage === 'result') byId('workspace-title').textContent = panel === 'yue' ? 'YuE2 음원·악보 완성' : '악보·파트 연습';
       document.querySelectorAll('button[data-result-panel]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.resultPanel === panel)));
     }
@@ -6043,6 +6044,11 @@ if (typeof document !== 'undefined') {
     };
     nextStep = function () {
       const page = document.body.dataset.workspacePage;
+      if (page === 'result' && document.body.dataset.resultPanel === 'yue') {
+        if (yueBusy || state.composing) return showError('생성이 끝난 뒤 악보·연습으로 이동해 주세요.');
+        if (yueSongResult && yueSongSource === state.song) adoptYueSong();
+        setResultPanel('practice'); return;
+      }
       if (page === 'input' && byId('steps').dataset.start === 'score' && !importedScore) {
         showError('악보 인식이 끝나야 다음으로 갈 수 있어요. 파일 옆 진행 상태를 확인해 주세요.');
         return;
