@@ -898,6 +898,7 @@ body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height:
 <p id="workspace-changes" class="workspace-change-note hidden" role="status"></p>
 <section id="workspace-dialogue" aria-label="곡 만들기 대화"></section>
 <p id="workspace-request-summary" class="workspace-request-summary hidden" role="status"></p>
+<button id="workspace-edit-settings" class="hidden" type="button">설정 고치기</button>
 
 <section id="view-library" class="view hidden" aria-label="라이브러리">
   <h2>라이브러리</h2>
@@ -2907,6 +2908,7 @@ function scoreAccepted(prefix, score) {
   if (currentStep() !== 1) goStep(1);
   showError("이 악보는 그대로 가져올 수 없어 달라지는 곳이 있어요. 목록을 확인하고 \"이 변환본으로 진행할게요\"에 표시해 주세요.");
   $(`${prefix}-changes`)?.scrollIntoView?.({ block: "center", behavior: "instant" });
+  $(`${prefix}-accept`)?.focus?.();
   return false;
 }
 
@@ -2948,20 +2950,24 @@ async function readScoreFile() {
     const data = await res.json();
     if (seq !== importSeq) return;
     if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : `악보 읽기 실패 (${res.status})`);
-    importedScore = data.score;
-    const sc = data.score;
-    $("import-summary").textContent = `${sc.bars}마디 · ${sc.meter} · ${sc.bpm} BPM · 음 ${sc.notes.length}개 · 조 ${sc.key} (${sc.key_note})`
-      + (sc.snapped ? ` · 격자에 맞추며 ${sc.snapped}개 음의 위치가 눈에 띄게 옮겨졌어요` : "")
-      + (sc.dropped ? ` · 겹치는 음 ${sc.dropped}개는 뺐어요(멜로디는 한 번에 한 음)` : "");
-    renderScoreChanges("import", sc);
-    showImportSheet(data.musicxml, seq);
-    $("import-key").value = sc.key;
-    $("import-sections").value = sectionsText(data.sections);
-    $("import-box").classList.remove("hidden");
-    $("import-status").textContent = "읽었어요. 구간을 확인하고 아래에서 골라 주세요.";
+    displayImportedScore(data, seq);
   } catch (e) {
     if (seq === importSeq) { $("import-status").textContent = "읽지 못했어요: " + e.message; showError("내 악보 가져오기: " + e.message); }
   } finally { input.value = ""; }
+}
+
+function displayImportedScore(data, seq) {
+  importedScore = data.score;
+  const sc = data.score;
+  $("import-summary").textContent = `${sc.bars}마디 · ${sc.meter} · ${sc.bpm} BPM · 음 ${sc.notes.length}개 · 조 ${sc.key} (${sc.key_note})`
+    + (sc.snapped ? ` · 격자에 맞추며 ${sc.snapped}개 음의 위치가 눈에 띄게 옮겨졌어요` : "")
+    + (sc.dropped ? ` · 겹치는 음 ${sc.dropped}개는 뺐어요(멜로디는 한 번에 한 음)` : "");
+  renderScoreChanges("import", sc);
+  showImportSheet(data.musicxml, seq);
+  $("import-key").value = sc.key;
+  $("import-sections").value = sectionsText(data.sections);
+  $("import-box").classList.remove("hidden");
+  $("import-status").textContent = "읽었어요. 구간을 확인하고 아래에서 골라 주세요.";
 }
 
 async function importSeed() {
@@ -3013,9 +3019,9 @@ async function importSong() {
   setMaking(true);
   $("import-status").textContent = "편곡하고 있어요...";
   try {
-    const data = await api("/api/score/song", { score, sections, genre: state.genre, key: $("import-key").value.trim() || null,
+    const data = await api("/api/score/song", requestWithSettings({ score, sections, genre: state.genre, key: $("import-key").value.trim() || null,
       accept_changes: true, melody_role: melodyRole(), fit_voice: fitVoice(),
-      instruments: [...state.instruments] });
+      instruments: [...state.instruments] }));
     if (seq !== importSeq) return;
     const carried = await carryMemberParts(data, previous);
     if (seq !== importSeq) return;
@@ -4171,10 +4177,12 @@ async function makeYueSong(first = null) {
         $("yuesong-audio").src = yueSongUrl;
         $("yuesong-audio").classList.remove("hidden");
         yueSongResult = st.info.result;
+        const repaired = st.info.plans?.find(p => p.seed === st.info.plan_seed)?.repaired_bars || 0;
         const parts = st.info.sections.map(([name, bars]) => `${name} ${bars}마디`).join(" → ");
         $("yuesong-note").textContent = `YuE2가 쓴 악보: ${parts}.`      // a job without given bars (the whole song) skips that sentence
           + (st.info.given_bars != null ? ` 처음 ${st.info.given_bars}마디가 내 마디예요` + (st.info.given_kept ? " (그대로 들어갔어요)." : ".") : "")
           + (st.info.lyrics === "ah" ? " 가사 없이 '아'로 불렀어요." : st.info.lyrics === "model" ? " YuE2가 지은 가사로 불렀어요." : "")
+          + (repaired ? ` AI가 새로 쓴 ${repaired}마디의 쉼표 길이를 박자에 맞췄어요. 입력 악보는 보존했어요.` : "")
           + (st.info.warning ? " " + st.info.warning : "");
         $("yuesong-result").classList.remove("hidden");
         $("yuesong-result").scrollIntoView?.({ block: "nearest" });
@@ -4791,6 +4799,31 @@ function composeRequest() {
   return body;
 }
 
+function requestWithSettings(body) {
+  const out = { ...body };
+  if (state.tempo != null && state.src.tempo) {
+    if (out.score) out.score = { ...out.score, bpm: state.tempo };
+    else out.tempo = state.tempo;
+  }
+  if (state.src.genre) out.genre = state.genre;
+  if (state.src.instr) out.instruments = [...state.instruments];
+  const selected = composeRequest();
+  const controls = out.score ? [['melody-role', 'melody_role'], ['vocal-style', 'fit_voice'], ['fit-voice', 'fit_voice']]
+    : [['form-choice', 'form'], ['seed-role', 'seed_role'], ['intro-player', 'intro_player'],
+      ['melody-source', 'melody_source', 'fill'], ['key-change', 'key_change'], ['melody-shape', 'melody_shape'],
+      ['melody-role', 'melody_role'], ['vocal-style', 'fit_voice'], ['fit-voice', 'fit_voice']];
+  for (const [id, ...keys] of controls) {
+    if ($(id)?.dataset.userSet !== '1') continue;
+    for (const key of keys) {
+      if (key in selected) out[key] = selected[key];
+      else delete out[key];
+    }
+  }
+  if (out.score && $('import-key')?.dataset.userSet === '1') out.key = $('import-key').value.trim() || null;
+  if (!out.score && state.style) out.style = state.style;
+  return out;
+}
+
 async function startCompose() {
   if (state.composing) return;
   if (!state.tokens.length) return showError("먼저 멜로디를 입력하세요.");
@@ -5114,6 +5147,8 @@ async function chatReadScore(file) {
   const res = await fetch("/api/score/read", { method: "POST", body: form });
   const data = await res.json();
   if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : `악보 읽기 실패 (${res.status})`);
+  displayImportedScore(data, ++importSeq);
+  setStart("score");
   return data.score;
 }
 
@@ -5148,11 +5183,13 @@ async function chatAct(action, text = "") {
     return;
   }
   if (action.type === "compose") {
-    if ($("vocal-style") && action.body.fit_voice) $("vocal-style").value = action.body.fit_voice;   // the guide vocal that sings it
-    await runCompose("/api/compose", action.body, "곡을 만들고 있어요...");
+    const body = requestWithSettings(action.body);
+    if ($("vocal-style") && body.fit_voice) $("vocal-style").value = body.fit_voice;
+    await runCompose("/api/compose", body, "곡을 만들고 있어요...");
   } else if (action.type === "score_song") {   // the score is the whole song: arranged as written
-    if ($("vocal-style") && action.body.fit_voice) $("vocal-style").value = action.body.fit_voice;
-    const data = await api("/api/score/song", action.body);
+    const body = requestWithSettings(action.body);
+    if ($("vocal-style") && body.fit_voice) $("vocal-style").value = body.fit_voice;
+    const data = await api("/api/score/song", body);
     stopPlayback();
     showSong(data);
   } else if (action.type === "regenerate") {
@@ -5411,6 +5448,10 @@ function backToChat() {
 function init() {
   initTheme();
   initTextSize();
+  for (const id of ['form-choice', 'seed-role', 'intro-player', 'melody-source', 'key-change', 'melody-shape',
+    'melody-role', 'vocal-style', 'fit-voice', 'import-key']) {
+    $(id)?.addEventListener?.('change', () => { $(id).dataset.userSet = '1'; });
+  }
   startBackground();
   if ($("chat-form")) {
     $("chat-form").onsubmit = chatSend;
@@ -5739,6 +5780,7 @@ if (typeof document !== 'undefined') {
       lyrics_mode: byId('yuesong-random').checked ? 'model' : 'ah',
       key_shift: Number(byId('yuesong-key').value),
       src: { ...state.src }, guide_voice: byId('vocal-style').value, style: state.style,
+      guide_voice_source: byId('vocal-style').dataset.userSet || '',
     });
     function write(settings, mode, keys) {
       state.tempo = settings.tempo;
@@ -5750,10 +5792,14 @@ if (typeof document !== 'undefined') {
         state.src = { ...settings.src };
         state.style = settings.style;
         byId('vocal-style').value = settings.guide_voice;
+        byId('vocal-style').dataset.userSet = settings.guide_voice_source;
       } else {
         if (keys.includes('tempo')) state.src.tempo = 'manual';
         if (keys.includes('genre')) { state.src.genre = 'rec'; state.src.instr ||= 'rec'; }
-        if (keys.includes('voice')) byId('vocal-style').value = settings.voice === 'male_low' ? 'male' : 'female';
+        if (keys.includes('voice')) {
+          byId('vocal-style').value = settings.voice === 'male_low' ? 'male' : 'female';
+          byId('vocal-style').dataset.userSet = '1';
+        }
         // Genre/tempo edits invalidate the old StyleAttrs, matching the existing manual controls.
         // Voice/lyrics/key changes preserve unrelated style selections.
         if (keys.includes('genre') || keys.includes('tempo')) state.style = null;
@@ -5808,12 +5854,16 @@ if (typeof document !== 'undefined') {
     const oldNextStep = nextStep;
     function setPage(page) {
       document.body.dataset.workspacePage = page;
+      byId('workspace-edit-settings').classList.toggle('hidden', !['make', 'result'].includes(page));
       for (const item of byId('workspace-pages').children) {
         if (item.dataset.page === page) item.setAttribute('aria-current', 'step'); else item.removeAttribute('aria-current');
       }
       const summary = byId('workspace-request-summary');
       summary.classList.toggle('hidden', page !== 'settings');
-      if (page === 'settings') summary.textContent = `입력 ${importedScore?.notes?.length || state.tokens.filter(t => t.degree > 0).length}음 · 멜로디를 보존하고 장르·보컬을 확인한 뒤 만들어 주세요.`;
+      if (page === 'settings') {
+        summary.textContent = `입력 ${importedScore?.notes?.length || state.tokens.filter(t => t.degree > 0).length}음 · 멜로디를 보존하고 장르·보컬을 확인한 뒤 만들어 주세요.`;
+        byId('workspace-style-settings').open = true;
+      }
       byId('btn-step-prev').disabled = page === 'input';
       byId('btn-step-next').textContent = page === 'input' ? '요청 확인 →' : page === 'settings' ? '만들기로 →' : '결과 보기 →';
       byId('steps').scrollTop = 0;
@@ -5856,12 +5906,18 @@ if (typeof document !== 'undefined') {
     };
     nextStep = function () {
       const page = document.body.dataset.workspacePage;
+      if (page === 'input' && byId('steps').dataset.start === 'score' && !importedScore) {
+        showError('악보 인식이 끝나야 다음으로 갈 수 있어요. 파일 옆 진행 상태를 확인해 주세요.');
+        return;
+      }
+      if (page === 'input' && importedScore && !scoreAccepted('import', importedScore)) return;
       const next = Workspace.nextPage(page, Boolean(state.tokens.length || importedScore), Boolean(state.result || state.song));
       if (next === 'settings') return setPage(next);
       if (page === 'settings') { if (!needStyle()) goStep(2); return; }
       oldNextStep();
     };
     byId('btn-step-next').onclick = () => nextStep();
+    byId('workspace-edit-settings').onclick = () => { chooseView('create'); setPage('settings'); };
     byId('btn-step-prev').onclick = () => {
       const page = document.body.dataset.workspacePage;
       if (page === 'settings') { goStep(1); return; }
