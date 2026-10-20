@@ -1,0 +1,18 @@
+fastapi
+uvicorn[standard]
+music21
+verovio                   # LGPL-3.0: engraves the part sheets on A4 pages (instmate/partscore.py)
+mido
+pretty_midi
+numpy
+openpyxl
+torch
+pytest
+httpx
+librosa
+soundfile
+mlx-lm
+huggingface_hub
+pyworld==0.3.5            # WORLD vocoder for the humming guide vocal (instmate/vocal.py)
+setuptools<81             # pyworld imports pkg_resources
+pedalboard==0.9.25        # GPL-3.0: plugin instruments for chosen parts (instmate/vst.py)

@@ -1,0 +1,406 @@
+/* Agent-first workspace: purposeful navigation, focused editor, persistent assistant. */
+body.workspace-app { --side-w: 184px; --gutter: 28px; background: var(--bg); }
+body.workspace-app::before, body.workspace-app .hero, body.workspace-app .mode-tabs { display: none !important; }
+body.workspace-app .app { display: grid; grid-template-columns: 184px minmax(0, 1fr) 360px; min-height: 100dvh; }
+body.workspace-app .side { width: auto; padding: 20px 12px; gap: 18px; background: var(--bg); border-right: 1px solid var(--border); }
+body.workspace-app .brand { order: -1; padding: 4px; }
+body.workspace-app .brand-main { font-size: 22px; }
+body.workspace-app .brand-sub { letter-spacing: .25em; }
+body.workspace-app .side nav a { min-height: 44px; border: 0; padding: 12px; color: var(--fg-body); }
+body.workspace-app .side nav a.on { color: var(--fg); background: var(--seed-on); }
+body.workspace-app .content { width: auto; padding: 30px 28px 120px; min-width: 0; }
+.workspace-welcome { margin-bottom: 24px; }
+.workspace-welcome h1, .workspace-heading h1 { font-size: clamp(25px, 2.6vw, 36px); margin: 8px 0 12px; line-height: 1.3; }
+.workspace-welcome p { margin: 0 0 16px; color: var(--fg-body); max-width: 52em; }
+.workspace-eyebrow { font-size: 11px; letter-spacing: .12em; }
+.workspace-starts { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+body.workspace-app button { min-height: 44px; box-shadow: none; }
+body.workspace-app button:focus-visible, body.workspace-app a:focus-visible { outline: 2px solid var(--seed); outline-offset: 3px; }
+body.workspace-app button.primary { background: var(--seed); color: var(--seed-ink); }
+body.workspace-app .card { background: var(--surface-px); backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid var(--border); box-shadow: none; padding: 22px; margin: 16px 0; }
+body.workspace-app .card h2 { font-size: 20px; margin: 0 0 12px; }
+body.workspace-app .help { color: var(--fg-body); }
+body.workspace-app input, body.workspace-app select, body.workspace-app textarea { max-width: 100%; min-width: 0; }
+body.workspace-app .row { min-width: 0; flex-wrap: wrap; }
+body.workspace-app .row > label { max-width: 100%; }
+.workspace-legacy-nav { color: var(--fg-muted); font-size: 13px; }
+.workspace-legacy-nav > summary { padding: 10px 2px; cursor: pointer; }
+.workspace-settings { border: 1px solid var(--border); border-radius: 12px; margin: 18px 0; background: var(--surface-px); }
+.workspace-settings > summary { cursor: pointer; padding: 16px; color: var(--fg-body); }
+.workspace-settings .card { margin: 0 !important; border: 0 !important; }
+.workspace-change-note { border: 1px solid var(--border); background: var(--warn-tint); padding: 12px 16px; border-radius: 10px; color: var(--fg); }
+.workspace-seed-summary { color: var(--fg-body); font-size: 14px; padding-top: 8px; }
+body.workspace-app #steps > [data-step] { display: none !important; }
+body.workspace-app #step-nav { display: none !important; }
+body.workspace-app[data-workspace-view="create"] #step-nav,
+body.workspace-app[data-workspace-view="studio"] #step-nav,
+body.workspace-app[data-workspace-view="advanced"] #step-nav { display: flex !important; }
+body.workspace-app[data-workspace-view="create"] #steps[data-start="score"] > #import-card,
+body.workspace-app[data-workspace-view="create"] #steps[data-start="hum"] > #hum-card,
+body.workspace-app[data-workspace-view="create"] #steps > #workspace-style-settings { display: block !important; }
+body.workspace-app[data-workspace-view="studio"] #steps > [data-step="2"]:not(.hidden),
+body.workspace-app[data-workspace-view="studio"] #steps > [data-step="3"]:not(.hidden) { display: block !important; }
+body.workspace-app[data-workspace-view="advanced"] #steps > #workspace-style-settings,
+body.workspace-app[data-workspace-view="advanced"] #steps > .start-choice,
+body.workspace-app[data-workspace-view="advanced"] #steps[data-start="type"] > #input-card,
+body.workspace-app[data-workspace-view="advanced"] #steps[data-start="sheet"] > #leadsheet-card,
+body.workspace-app[data-workspace-view="advanced"] #steps[data-start="score"] > #import-card,
+body.workspace-app[data-workspace-view="advanced"] #steps[data-start="hum"] > #hum-card { display: block !important; }
+body.workspace-app[data-workspace-view="advanced"] #steps > .start-choice { display: flex !important; }
+body.workspace-app[data-workspace-view="voices"] #steps,
+body.workspace-app[data-workspace-view="library"] #steps { display: none !important; }
+body.workspace-app #assistant-dock { position: sticky; top: 0; align-self: start; height: 100dvh; overflow: auto; min-width: 0; background: var(--surface-px); border-left: 1px solid var(--border); padding: 22px 18px; display: flex; flex-direction: column; gap: 12px; }
+body.workspace-app #assistant-dock #chat-card { display: flex !important; flex-direction: column; flex: 1; min-height: 0; margin: 0; padding: 0; border: 0; background: none; }
+body.workspace-app #chat-card > h2 { font-size: 20px; }
+body.workspace-app #chat-log { flex: 1; min-height: 120px; max-height: calc(100dvh - 395px); margin: 14px 0; font-size: 14px; }
+body.workspace-app #chat-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+body.workspace-app #chat-file { grid-column: 1 / -1; width: 100%; }
+body.workspace-app #chat-text { width: 100%; min-width: 0 !important; margin: 0; font-size: 14px; }
+body.workspace-app #chat-options { font-size: 12px; }
+.workspace-command-mode { display: flex; gap: 6px; flex-wrap: wrap; }
+.workspace-command-mode button { font-size: 12px; padding: 7px 10px; flex: 1; }
+.workspace-command-mode button[aria-pressed="true"] { background: var(--seed-on); border-color: var(--seed); color: var(--fg); }
+#workspace-connection { font-size: 12px; padding: 8px 0; margin: 0; }
+.workspace-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.workspace-tools button { font-size: 12px; flex: 1; padding: 8px; }
+.workspace-safety { font-size: 11px; line-height: 1.6; color: var(--fg-muted); margin: 0; }
+.workspace-proposal { padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+.workspace-proposal button { margin-top: 8px; }
+.workspace-proposal dl { margin: 0; font-size: 13px; }
+.workspace-proposal dt { color: var(--fg-body); }
+.workspace-proposal dd { margin: 0 0 8px; }
+.workspace-voice-panel { padding: 22px; border-radius: 12px; background: var(--surface-px); border: 1px solid var(--border); }
+#workspace-voice-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 18px 0; }
+#workspace-voice-options button { text-align: left; padding: 16px; min-height: 80px; }
+#workspace-voice-options button[aria-pressed="true"] { border-color: var(--seed); background: var(--seed-on); }
+#workspace-chat-toggle { display: none; }
+@media (max-width: 1150px) and (min-width: 701px) {
+ body.workspace-app .app { grid-template-columns: 142px minmax(0,1fr) 320px; }
+ body.workspace-app .content { padding: 24px 18px 100px; }
+ body.workspace-app .brand-main { font-size: 18px; }
+ body.workspace-app .brand-sub { font-size: 10px; }
+ body.workspace-app .side { padding: 18px 8px; }
+}
+@media (max-width: 700px) {
+ body.workspace-app .app { display: block; }
+ body.workspace-app .side { position: sticky; top: 0; z-index: 50; height: auto; width: 100%; padding: 10px 12px; display: block; }
+ body.workspace-app .side .brand, body.workspace-app .side .side-lib, body.workspace-app .side .side-note { display: none; }
+ body.workspace-app .workspace-legacy-nav { display: block; }
+ body.workspace-app .workspace-accessibility { display: block; font-size: 13px; margin: 6px 0; }
+ body.workspace-app .workspace-accessibility > summary { padding: 6px 4px; cursor: pointer; }
+ body.workspace-app .workspace-accessibility .theme-btn { display: inline-flex; width: auto; margin: 6px; }
+ body.workspace-app #views { display: flex; flex-direction: row; overflow-x: auto; gap: 4px; }
+ body.workspace-app #views a { flex: 0 0 auto; font-size: 13px; padding: 10px; }
+ body.workspace-app .content { padding: 22px 16px 100px; }
+ body.workspace-app .card { padding: 18px; }
+ body.workspace-app .workspace-starts button { flex: 1 1 120px; }
+ body.workspace-app .step-nav { flex-wrap: wrap; gap: 8px; }
+ body.workspace-app #assistant-dock { position: fixed; top: auto; right: 12px; bottom: 12px; width: calc(100vw - 24px); height: min(78dvh,650px); max-height: calc(100dvh - 24px); border: 1px solid var(--border); border-radius: 16px; z-index: 1000; padding: 18px 16px 66px; transform: translateY(calc(100% + 24px)); visibility: hidden; }
+ body.workspace-app.workspace-chat-open #assistant-dock { transform: none; visibility: visible; }
+ body.workspace-app #chat-log { max-height: 35dvh; min-height: 90px; }
+ #workspace-chat-toggle { display: block; position: fixed; bottom: 18px; right: 18px; z-index: 1001; background: var(--seed); color: var(--seed-ink); border-radius: 24px; padding: 12px 18px; }
+ #workspace-voice-options { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { body.workspace-app *, body.workspace-app *::before { scroll-behavior: auto !important; animation: none !important; transition: none !important; } }
+
+/* One creation page at a time; existing controls keep their state and handlers. */
+body.workspace-app { overflow: hidden; }
+body.workspace-app .app { grid-template-columns: 160px minmax(0,1fr); height: calc(100dvh - var(--public-notice-height,0px) - var(--playback-height,0px)); min-height: 0; }
+body.workspace-app .libbar, body.workspace-app .playerbar { left: 160px; }
+body.workspace-app .libbar { max-height: 35dvh; overflow: auto; }
+@media (max-width:700px) { body.workspace-app .libbar, body.workspace-app .playerbar { left: 0; } }
+body.workspace-app .side { overflow: auto; }
+body.workspace-app .content { height: 100%; min-height: 0; padding: 20px 28px; display: flex; flex-direction: column; overflow: hidden; }
+.workspace-pages { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0 0 16px; padding: 0; list-style: none; color: var(--fg-muted); font-size: 13px; }
+.workspace-pages [aria-current="step"] { color: var(--seed); font-weight: 700; }
+#workspace-section-heading:not(.hidden) { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+#workspace-description { flex-basis: 100%; order: 1; }
+body[data-workspace-page="auxiliary"] .workspace-pages { display: none; }
+.workspace-welcome { margin-bottom: 12px; }
+.workspace-welcome h1 { margin-top: 0; }
+.workspace-welcome .workspace-eyebrow { display: none; }
+#workspace-dialogue { min-height: 0; flex: 1; overflow: auto; }
+body.workspace-app #workspace-pages, .workspace-welcome, .workspace-heading, #workspace-changes, #workspace-edit-settings { flex: none; }
+body.workspace-app #assistant-dock { position: static; height: auto; max-height: none; width: 100%; padding: 0; border: 0; display: block; overflow: visible; transform: none; visibility: visible; background: transparent; }
+body.workspace-app #assistant-dock #chat-card { display: block !important; flex: none; min-height: auto; }
+body.workspace-app #chat-card > h2, body.workspace-app #chat-card > .help { display: none; }
+body.workspace-app #chat-log { flex: none; min-height: 80px; max-height: 24dvh; overflow: auto; }
+body.workspace-app #chat-form { margin: 12px 0; min-height: 104px; flex-shrink: 0; align-items: center; }
+#workspace-dialogue #assistant-dock { height: 100%; }
+body.workspace-app #workspace-dialogue #chat-card { display: flex !important; height: 100%; min-height: 0; }
+body.workspace-app #workspace-dialogue #chat-log { flex: 1; min-height: 96px; max-height: none; }
+body.workspace-app #chat-log > li { flex: none; }
+body[data-conversation-started="true"] .workspace-welcome > p,
+body[data-conversation-started="true"] .workspace-welcome .workspace-starts { display: none; }
+#workspace-dialogue .workspace-command-mode { display: none; }
+#workspace-dialogue #chat-form, #workspace-dialogue #workspace-connection, #workspace-dialogue #chat-card > .row,
+#workspace-dialogue .workspace-chat-settings { flex: none; }
+.workspace-attach { grid-column: 1; width: fit-content; }
+.workspace-attach + span { grid-column: 2; overflow-wrap: anywhere; }
+body.workspace-app .filebtn { position: relative; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+body.workspace-app .filebtn:focus-within { outline: 2px solid var(--seed); outline-offset: 2px; }
+body.workspace-app .filebtn input { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; opacity: 0; cursor: pointer; }
+body.workspace-app #chat-file { width: 100%; }
+.workspace-input-tools { grid-column: 1 / -1; gap: 8px; margin: 0; }
+.workspace-input-tools #workspace-file-name { flex: 1; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-input-tools #workspace-file-name:empty { display: none; }
+body.workspace-app #chat-text { grid-column: 1; min-height: 44px; }
+body.workspace-app #chat-send { grid-column: 2; }
+.workspace-tools { margin: 12px 0; }
+.workspace-chat-settings { margin: 12px 0; }
+body.workspace-app #steps { flex: 1; min-height: 0; overflow: auto; }
+body.workspace-app #step-nav { position: sticky; bottom: 0; margin: 12px 0 0; padding: 12px 0; background: var(--bg); }
+body.workspace-app[data-workspace-page="input"] .content:has(#steps[data-start="talk"]) #steps { flex: none; }
+body.workspace-app[data-workspace-page="input"] .content:has(#steps:not([data-start="talk"])) #workspace-dialogue { display: none; }
+body.workspace-app:not([data-workspace-page="input"]) #workspace-dialogue,
+body.workspace-app:not([data-workspace-page="input"]) #workspace-create { display: none !important; }
+body.workspace-app[data-workspace-page="settings"] #steps > [data-step] { display: none !important; }
+body.workspace-app[data-workspace-page="settings"] #steps > #workspace-style-settings { display: block !important; }
+body.workspace-app[data-workspace-page="input"] #steps > #workspace-style-settings { display: none !important; }
+body.workspace-app[data-workspace-page="result"] #steps > [data-step="2"]:not(.hidden) { display: none !important; }
+body.workspace-app[data-workspace-page="make"] #steps > [data-step="3"]:not(.hidden) { display: none !important; }
+body.workspace-app:not([data-workspace-page="result"]) #steps > #workspace-result-tabs { display: none !important; }
+body.workspace-app[data-workspace-page="result"]:not([data-result-panel="yue"]) #btn-step-next { display: none; }
+body.workspace-app[data-workspace-page="make"] #steps > #song:not(.hidden),
+body.workspace-app[data-workspace-page="make"] #steps > #yue2-card:not(.hidden) { display: block !important; }
+body.workspace-app[data-workspace-page="make"] #song > :not(h2):not(#song-cover):not(#song-route):not(#song-about):not(.workspace-playback) { display: none !important; }
+body.workspace-app[data-workspace-page="make"] #song { padding: 16px; }
+.workspace-request-summary { flex: none; color: var(--fg-body); font-size: 13px; padding: 8px 0; margin: 0; }
+body.workspace-app:not([data-workspace-page="result"]) #workspace-result-tabs { display: none !important; }
+.workspace-result-tabs { display: flex !important; gap: 8px; margin: 0 0 12px; }
+.workspace-result-tabs [aria-pressed="true"] { border-color: var(--seed); color: var(--seed); }
+body.workspace-app[data-workspace-page="result"] #steps > #song,
+body.workspace-app[data-workspace-page="result"] #steps > #yue2-card,
+body.workspace-app[data-workspace-page="result"] #steps > #practice-card { display: none !important; }
+body.workspace-app[data-workspace-page="result"][data-result-panel="song"] #steps > #song:not(.hidden),
+body.workspace-app[data-workspace-page="result"][data-result-panel="yue"] #steps > #yue2-card:not(.hidden),
+body.workspace-app[data-workspace-page="result"][data-result-panel="practice"] #steps > #practice-card:not(.hidden) { display: block !important; }
+body.workspace-app #song-cover { max-width: 150px; max-height: 150px; }
+.workspace-playback { margin: 16px 0; }
+body.workspace-app #workspace-chat-toggle { display: none; }
+body.workspace-app[data-workspace-page="input"] #workspace-chat-toggle { display: none; }
+#workspace-assistant-dialog { width: min(720px,calc(100vw - 24px)); max-height: calc(100dvh - 32px); padding: 22px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg); color: var(--fg); }
+#workspace-assistant-dialog::backdrop { background: #0009; }
+#workspace-options-dialog { width: min(640px,calc(100vw - 24px)); max-height: calc(100dvh - 32px); padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--bg); color: var(--fg); }
+#workspace-options-dialog::backdrop { background: #0009; }
+#workspace-dialogue-close { float: right; margin-bottom: 12px; }
+@media (max-width:700px) {
+ body.workspace-app .app { display: flex; flex-direction: column; }
+ body.workspace-app .side { flex: none; padding: 8px; position: static; overflow: visible; }
+ body.workspace-app .content { flex: 1; min-height: 0; padding: 16px; }
+ body.workspace-app .workspace-accessibility, body.workspace-app .workspace-legacy-nav { display: none; }
+ .workspace-pages { gap: 8px; font-size: 11px; margin-bottom: 10px; }
+ .workspace-welcome h1 { font-size: 25px; }
+ .workspace-welcome > p:not(.workspace-eyebrow) { font-size: 13px; margin-bottom: 8px; }
+ .workspace-welcome > p, .workspace-welcome .workspace-starts { display: none; }
+ body[data-workspace-page="input"] #workspace-changes, body[data-workspace-page="input"] #step-hint,
+ body[data-workspace-page="input"] #btn-step-prev { display: none; }
+ .workspace-starts { margin: 8px 0; }
+ #workspace-assistant-dialog { padding: 16px; }
+}
+
+body.workspace-app[data-workspace-page="auxiliary"] .view { flex: 1; min-height: 0; overflow: auto; }
+
+@media (max-height: 650px) {
+ body.workspace-app .content { padding: 10px 18px; }
+ body.workspace-app .side { justify-content: flex-start; gap: 10px; padding: 10px 8px; }
+ body.workspace-app .side nav a { min-height: 36px; padding: 8px; font-size: 13px; }
+ body.workspace-app .side-lib, body.workspace-app .side-note,
+ body.workspace-app .workspace-accessibility, body.workspace-app .workspace-legacy-nav { display: none; }
+ .workspace-pages { margin-bottom: 8px; font-size: 11px; }
+ .workspace-welcome h1, .workspace-heading h1 { font-size: 22px; margin: 0 0 8px; }
+ .workspace-welcome > p, .workspace-welcome .workspace-starts, .workspace-seed-summary,
+ .workspace-heading p, #workspace-changes, #step-hint { display: none !important; }
+ body[data-workspace-page="input"] #btn-step-prev { display: none; }
+ body.workspace-app #step-nav { flex: none; padding: 8px 0; margin-top: 8px; }
+ body.workspace-app #chat-form { margin: 6px 0; }
+ body.workspace-app #chat-log { margin: 6px 0; }
+ #workspace-edit-settings { align-self: flex-end; min-height: 32px; padding: 6px 12px; }
+ body.workspace-app .card { padding: 12px; margin: 8px 0; }
+ body.workspace-app[data-workspace-page="make"][data-has-song="true"] #steps > #song { display: none !important; }
+ body.workspace-app #make-card > h2, #practice-card > h2,
+ #practice-box[open] > summary, #practice-box > p.help { display: none; }
+}
+
+/* Keep the sidebar inside the banner-adjusted app height; autofocus must not scroll the logo under the notice. */
+@media (min-width: 701px) {
+ body.workspace-app .side { height: 100%; min-height: 0; flex-direction: column; align-items: stretch; }
+ body.workspace-app #views { flex-direction: column; flex: none; width: 100%; }
+ body.workspace-app .brand-main { font-size: 18px; white-space: nowrap; }
+}
+
+/* ---------- studio look (화면 설정 → 스튜디오, user request 2026-10-18: "Mureka처럼" — flat near-black panels, a teal accent,
+   stacked input cards and one wide make button).  Off by default (listening-queue rule): only :root[data-style="studio"]. */
+/* night (user, 2026-10-19: "너무 어두움", then a terminal screenshot as the target): a near-black page, panels clearly
+   lifted off it, bright text in all three levels; day keeps style.css's light palette with a teal accent */
+/* palette 2026-10-19: mint green (main actions, selection) + red (warnings, record, highlights) on a near-black page */
+:root[data-style="studio"]:not([data-theme="light"]) {
+  --bg: #08090A; --surface: #15191A; --surface-2: #1F2527; --surface-3: #2C3437; --border: #3A4447;
+  --surface-px: #15191A; --surface-2-px: #1F2527; --border-px: #3A4447;
+  --fg: #FFFFFF; --fg-body: #EDF2F0; --fg-muted: #C3CCC9;   /* greys kept light: "글자가 잘 안 보여" */
+  --seed: #4DEBBE; --ai: #4DEBBE; --warn: #FF6371; --seed-ink: #04130F; --grad-btn: linear-gradient(0deg, #4DEBBE, #4DEBBE);
+  --side-bg: #08090A; --me-bg: #123D33;
+}
+:root[data-style="studio"][data-theme="light"] {
+  --seed: #076B50; --ai: #076B50; --warn: #C21F36; --seed-ink: #FFFFFF; --grad-btn: linear-gradient(0deg, #076B50, #076B50);
+  --side-bg: #FFFFFF; --me-bg: #D2F2E7;
+  --fg: #0B0C0F; --fg-body: #1F2528; --fg-muted: #3B4346;
+}
+:root[data-style="studio"] {
+  --grad: linear-gradient(90deg, var(--seed), var(--seed));
+  --seed-on: color-mix(in srgb, var(--seed) 12%, transparent);
+  --fs-body: 16px; --fs-small: 14px; --r-lg: 12px; --r-md: 10px; --side-w: 210px;
+}
+:root[data-style="studio"] body::before { display: none; }   /* the genre lights go; the background notes stay (test_yuesong_page) */
+:root[data-style="studio"] .card { -webkit-backdrop-filter: none; backdrop-filter: none; border: 1px solid var(--border); padding: 20px; }
+:root[data-style="studio"] .side { background: var(--side-bg); border-right: 1px solid var(--border); padding-top: 18px; }
+:root[data-style="studio"] .side nav a { font-weight: 500; font-size: 14px; padding: 8px 12px; border-left: 0; }
+:root[data-style="studio"] .side nav a.on { background: var(--seed-on); color: var(--seed); }
+:root[data-style="studio"] .workspace-welcome h1 { font-size: 22px; margin: 4px 0 8px; }
+:root[data-style="studio"] button { border-color: var(--border); background: var(--surface-2); }
+:root[data-style="studio"] button.primary { border-color: transparent; font-weight: 600; box-shadow: none; }
+/* the conversation is the big stacked card; the input reads like Mureka's lyric box and the make button spans the width */
+:root[data-style="studio"] body.workspace-app #chat-form { grid-template-columns: 1fr; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 14px; gap: 10px; }
+:root[data-style="studio"] body.workspace-app #chat-text { min-height: 88px; background: transparent; border: 0; font-size: 14px; }
+:root[data-style="studio"] body.workspace-app #chat-form { display: flex; flex-direction: column; align-items: stretch; }
+:root[data-style="studio"] body.workspace-app #chat-form > #chat-text { order: -1; }
+:root[data-style="studio"] body.workspace-app #chat-send { width: 100%; padding: 12px; font-size: 15px; }
+:root[data-style="studio"] .chat-log li.chat-me { background: var(--me-bg); }
+/* centre column (user, 2026-10-19: "가운데 정렬, 대화창의 넓이·크기"): like Mureka's create page, the heading, the conversation
+   and the input card share one centred 720 px column; the input box is tall and the make button spans it. */
+:root[data-style="studio"] body.workspace-app main, :root[data-style="studio"] .workspace-welcome,
+:root[data-style="studio"] #workspace-dialogue { width: 100%; max-width: 720px; margin-left: auto; margin-right: auto; }   /* width: auto margins in the column flex would shrink it */
+:root[data-style="studio"] .workspace-welcome { text-align: center; }
+:root[data-style="studio"] .workspace-welcome .row, :root[data-style="studio"] .workspace-welcome .workspace-starts { justify-content: center; }
+:root[data-style="studio"] body.workspace-app #chat-text { min-height: 64px; padding: 4px 2px; font-size: 15px; }
+:root[data-style="studio"] body.workspace-app #chat-log { max-height: 46dvh; }
+/* placeholders and help text are read too: no faint grey */
+:root[data-style="studio"] ::placeholder { color: var(--fg-muted); opacity: 1; }
+:root[data-style="studio"] .help, :root[data-style="studio"] .workspace-welcome p { color: var(--fg-body); }
+:root[data-style="studio"] .chat-log li { font-size: 15px; }
+:root[data-style="studio"] .chat-log li.chat-app { color: var(--fg); }
+/* red accent: a short rule under the heading and a red edge on warnings */
+:root[data-style="studio"] .workspace-welcome h1::after { content: ""; display: block; width: 36px; height: 3px; margin: 8px auto 0; border-radius: 2px; background: var(--warn); }
+:root[data-style="studio"] .side nav a.on { box-shadow: inset 3px 0 0 var(--warn); }
+/* fewer words (user, 2026-10-19: "글자가 넘 많아여"): intro, step labels and long help paragraphs go; status, errors, live regions,
+   empty-list lines (li.help), labels and buttons stay.  CSS only: the HTML text is untouched. */
+:root[data-style="studio"] .workspace-eyebrow, :root[data-style="studio"] .workspace-welcome > p { display: none; }
+:root[data-style="studio"] #workspace-pages { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }   /* still read out as the step */
+/* only the create screen's own help lines: elsewhere help carries rules (vocal must be chosen, YuE2 CC BY-NC, tempo warnings) */
+:root[data-style="studio"] #workspace-create p.help:not([aria-live]):not([role]), :root[data-style="studio"] #chat-card > p.help:not([aria-live]):not([role]),
+:root[data-style="studio"] #workspace-create .guide-list { display: none; }
+/* 씨앗이 (the guide's button, user 2026-10-19): two frames swap on the beat so the hand strums, the body bobs with
+   it, and notes rise from above the head to the upper right.  Still for prefers-reduced-motion.  The guide opens over it. */
+.mascot-btn { position: fixed; right: var(--mx, 18px); bottom: var(--my, 18px); touch-action: none; cursor: grab; z-index: 1003; width: 96px; height: 96px; padding: 0; border: 0; border-radius: 0;
+  background: transparent; cursor: pointer; overflow: visible; }
+.mascot-btn[hidden] { display: none; }
+.mascot-btn:focus-visible { outline: 3px solid var(--seed); outline-offset: 4px; }
+.mascot-btn img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); animation: mascot-bob .6s ease-in-out infinite; }
+.mascot-btn .m-up { animation: mascot-bob .6s ease-in-out infinite, mascot-strum .6s steps(1) infinite; }
+.mascot-btn:hover img { transform: scale(1.06); }
+.m-note { position: absolute; left: 44%; top: 4%; font-size: 20px; font-weight: 700; color: var(--seed); opacity: 0; pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,.35); animation: mascot-note 2.4s ease-out infinite; }
+.m-note:nth-of-type(2) { animation-delay: .8s; font-size: 17px; }
+.m-note:nth-of-type(3) { animation-delay: 1.6s; }
+@keyframes mascot-strum { 0%, 49.9% { opacity: 0; } 50%, 100% { opacity: 1; } }
+@keyframes mascot-bob { 0%, 100% { translate: 0 0; rotate: 0deg; } 50% { translate: 0 -3px; rotate: -2deg; } }
+@keyframes mascot-note { 0% { opacity: 0; transform: translate(0, 0) scale(.6) rotate(0deg); }
+  15% { opacity: 1; } 70% { opacity: .9; } 100% { opacity: 0; transform: translate(46px, -54px) scale(1.1) rotate(18deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .mascot-btn img, .m-note { animation: none !important; }
+  .mascot-btn .m-up { opacity: 0; }
+}
+/* 사용 안내: a chat-style sheet over the page, above 씨앗이 */
+.guide-panel { position: fixed; right: 18px; bottom: 124px; z-index: 1002; width: min(340px, calc(100vw - 36px)); max-height: min(70dvh, 560px);
+  overflow: auto; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-px); box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+.guide-panel[hidden] { display: none; }
+.guide-head { display: flex; align-items: center; gap: 8px; }
+.guide-head img { width: 40px; height: 40px; flex: none; }
+.guide-head h2 { font-size: 17px; margin: 0; flex: 1; }
+.guide-panel h3 { font-size: 14px; margin: 18px 0 8px; color: var(--fg-body); }
+.guide-now { margin: 12px 0 0; padding: 12px; border-radius: 4px 14px 14px 14px; background: var(--seed-on); color: var(--fg); font-size: 15px; line-height: 1.55; }
+.guide-faq { display: flex; flex-direction: column; gap: 6px; }
+.guide-faq button { text-align: left; font-size: 14px; }
+.guide-answer { margin: 12px 0 0; padding: 12px; border-radius: 4px 14px 14px 14px; background: var(--surface-2-px); color: var(--fg); font-size: 15px; line-height: 1.55; }
+.guide-answer:empty { display: none; }
+/* the studio button look (a filled surface) must not put a disc behind 씨앗이 */
+:root[data-style="studio"] .mascot-btn, :root[data-style="studio"] .mascot-btn:hover { background: transparent; border: 0; box-shadow: none; }
+.terms-dialog { max-width: min(520px, calc(100vw - 32px)); border: 1px solid var(--border); border-radius: 16px; background: var(--surface-px); color: var(--fg); padding: 20px 22px; }
+.terms-dialog::backdrop { background: rgba(0,0,0,.55); }
+.terms-dialog h2 { margin: 0 0 10px; font-size: 19px; }
+.terms-dialog ul { margin: 0 0 14px; padding-left: 18px; display: grid; gap: 8px; line-height: 1.55; }
+.terms-dialog form { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+/* a single pose replaces the two strumming frames; it bobs gently, and sleeps still */
+.mascot-btn[data-pose]:not([data-pose=""]) .m-down, .mascot-btn[data-pose]:not([data-pose=""]) .m-up,
+.mascot-btn[data-pose="sleep"] .m-note, .mascot-btn[data-pose="headphones"] .m-note { display: none; }
+.mascot-btn .m-pose { animation: mascot-bob 1.4s ease-in-out infinite; }
+.mascot-btn .m-pose[hidden] { display: none; }
+.mascot-btn[data-pose="sleep"] .m-pose { animation: none; opacity: .85; }
+.mascot-btn[data-pose="jump"] .m-pose { animation: mascot-jump .5s ease-out 3; }
+@keyframes mascot-jump { 0%, 100% { translate: 0 0; } 40% { translate: 0 -14px; } }
+.guide-reply { display: flex; align-items: flex-start; gap: 8px; }
+.guide-reply img { width: 36px; height: 36px; flex: none; margin-top: 12px; }
+.guide-reply:has(.guide-answer:empty) { display: none; }
+.terms-dialog .guide-head img { width: 56px; height: 56px; }
+/* one input row (user, 2026-10-19): [허밍 icon] [message] [악보 첨부 icon] [보내기]; names show on hover and to screen readers */
+:root[data-style="studio"] body.workspace-app #chat-form, :root body.workspace-app #chat-form { display: flex !important; flex-direction: row; flex-wrap: wrap;
+  align-items: center; gap: 8px; min-height: 0; padding: 8px; }
+body.workspace-app #chat-form > .workspace-input-tools { display: contents; }
+body.workspace-app #chat-form .chat-hum { order: 1; }
+:root[data-style="studio"] body.workspace-app #chat-form > #chat-text, :root body.workspace-app #chat-form > #chat-text { order: 2; flex: 1 1 160px; min-height: 44px; min-width: 0 !important; }
+body.workspace-app #chat-form .workspace-attach { order: 3; }
+:root[data-style="studio"] body.workspace-app #chat-send, :root body.workspace-app #chat-form > #chat-send { order: 4; width: auto; padding: 10px 18px; }
+body.workspace-app #chat-form #workspace-file-name { order: 5; flex-basis: 100%; }
+.chat-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; flex: none; cursor: pointer; position: relative; }
+.chat-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.chat-icon.workspace-attach input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.chat-icon:focus-within, .chat-icon:focus-visible { outline: 2px solid var(--seed); outline-offset: 2px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* Pretendard (OFL-1.1, static/vendor/pretendard/LICENSE.txt): one variable font, bundled so nothing loads from outside */
+@font-face { font-family: "Pretendard Variable"; src: url("/static/vendor/pretendard/PretendardVariable.woff2") format("woff2-variations");
+  font-weight: 45 920; font-style: normal; font-display: swap; }
+:root[data-style="studio"] { --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --h1: 24px; --col: 720px; --chat-fs: 15px; --mascot: 96px; --icon: 44px; }
+:root[data-style="studio"] body { font-family: var(--font); letter-spacing: -0.01em; word-break: keep-all; }
+:root[data-style="studio"] .workspace-welcome h1 { font-size: var(--h1); font-weight: 700; letter-spacing: -0.02em; }
+:root[data-style="studio"] .chat-log li, :root[data-style="studio"] body.workspace-app #chat-text { font-size: var(--chat-fs); }
+:root[data-style="studio"] body.workspace-app main, :root[data-style="studio"] .workspace-welcome, :root[data-style="studio"] #workspace-dialogue { max-width: var(--col); }
+:root[data-style="studio"] .mascot-btn { width: var(--mascot); height: var(--mascot); }
+:root[data-style="studio"] .chat-icon { width: var(--icon); height: var(--icon); }
+/* five widths: large desktop / laptop / tablet landscape / tablet portrait / phone */
+@media (min-width: 1440px) {
+  :root[data-style="studio"] { --fs-body: 17px; --h1: 28px; --col: 800px; --chat-fs: 16px; --mascot: 112px; }
+}
+@media (min-width: 1100px) and (max-width: 1439px) {
+  :root[data-style="studio"] { --fs-body: 16px; --h1: 24px; --col: 720px; }
+}
+@media (min-width: 768px) and (max-width: 1099px) {
+  :root[data-style="studio"] { --fs-body: 16px; --h1: 22px; --col: 100%; --mascot: 88px; }
+}
+@media (min-width: 481px) and (max-width: 767px) {
+  :root[data-style="studio"] { --fs-body: 15px; --h1: 20px; --col: 100%; --chat-fs: 15px; --mascot: 76px; --icon: 42px; }
+}
+@media (max-width: 480px) {
+  :root[data-style="studio"] { --fs-body: 15px; --h1: 19px; --col: 100%; --chat-fs: 15px; --mascot: 64px; --icon: 40px; }
+  :root[data-style="studio"] body.workspace-app #chat-send { padding: 10px 12px; }
+  :root[data-style="studio"] .guide-panel { right: 8px; left: 8px; width: auto; bottom: 84px; }
+  :root[data-style="studio"] .mascot-btn { right: var(--mx, 8px); bottom: var(--my, 8px); }
+}
+/* the Gemini key box says "사용중" and is marked once a key is saved */
+#gemini-box.gemini-on > summary { color: var(--seed); font-weight: 600; }
+#gemini-box.gemini-on > summary::before { content: "● "; }
+/* 씨앗이's speech bubble, above it on the left */
+.mascot-say { position: fixed; right: min(calc(var(--mx, 18px) + var(--mascot, 96px) - 8px), calc(100vw - 160px)); bottom: calc(var(--my, 18px) + var(--mascot, 96px) - 12px); z-index: 1003;
+  max-width: min(300px, calc(100vw - 120px)); margin: 0; padding: 12px 14px; border-radius: 16px 16px 4px 16px; cursor: pointer;
+  background: var(--surface-px); color: var(--fg); border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  font-size: 15px; line-height: 1.5; animation: mascot-pop .25s ease-out; }
+.mascot-say[hidden] { display: none; }
+@keyframes mascot-pop { from { opacity: 0; transform: translateY(6px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .mascot-say { animation: none; } }
+/* the step hint is spoken by 씨앗이; the line stays for screen readers */
+:root[data-style="studio"] #step-hint { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* left bottom: fewer, smaller words */
+:root[data-style="studio"] .side-note { display: none; }
+:root[data-style="studio"] .side-lib-title { font-size: 12px; }
+:root[data-style="studio"] .side-lib, :root[data-style="studio"] #lib-list, :root[data-style="studio"] #lib-list .help { font-size: 13px; }

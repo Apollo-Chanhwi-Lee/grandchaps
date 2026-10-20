@@ -1,0 +1,167 @@
+# Genre -> part -> instrument table (read by instmate/instruments.py; shown in the UI as the genre's line-up).
+#
+# instruments: id -> how one part sounds.
+#   sound  key of audio.SOUNDS for the part it is used on. Always required: it is what plays when the plugin is not
+#          installed (or its saved sound is missing), so a demo on another computer still works.
+#   vst    plugin bundle; state = file in models/vst/ saved with scripts/vst_pick.py --instrument <id>
+#   fx     effect chain (below) applied to the rendered part, e.g. drive + cabinet on a clean guitar;
+#          fallback = the SoundFont sound used instead when the effect cannot run (no pedalboard)
+#   sfz    an SFZ sample instrument rendered with sfizz_render (path relative to the project, or absolute)
+#   tier   licence tier (default A).  A: the instrument itself may ship with the app (CC0, CC-BY, MIT, BSD, GPL).
+#          B: only music made with it may be shared; everyone installs it themselves.  An unchecked licence is B.
+#   license, credit   licence name and the attribution line shown in the app (CC-BY needs one)
+#   release  the tier-A instrument that replaces a tier-B one in release mode (none: its SoundFont sound plays)
+# sources: the sound files every instrument falls back to (shown with the credits)
+# modes:   which tiers a mode may use.  Plugins and samples are never downloaded: only what is installed here is used.
+# fx: id -> pedalboard chain settings (instmate/instruments.py: apply_fx).  Optional `plugin` + `state` (+ `tier`,
+#     `license`): an amp plugin with a saved setting (scripts/vst_pick.py --fx <id>) plays instead of the built-in drive
+#     and cabinet when it is installed and its tier is allowed; otherwise the built-in chain plays.
+# genres: parts = the genre's instrument per part; sections.<kind>.guitar = another guitar tone for that section kind
+#         (one alternative tone per genre), sections.<kind>.add = parts that, when the user
+#         keeps them in the line-up, play only in those sections (e.g. strings join at the chorus). A part the user changes on screen always wins over this table.
+
+instruments:
+  hum_vocal:          {label: "가이드 보컬", sound: voice}
+  piano_lead:         {label: "피아노", sound: piano}
+  violin_lead:        {label: "바이올린 리드", sound: violin}
+  grand_piano:        {label: "그랜드 피아노", sound: grand}
+  bright_piano:       {label: "브라이트 피아노", sound: bright}
+  electric_piano:     {label: "일렉 피아노", sound: electric}
+  rock_organ:         {label: "록 오르간", sound: organ}
+  dexed_epiano:       {label: "Dexed 일렉 피아노", sound: electric, license: "GPL-3.0",
+                       vst: "~/Library/Audio/Plug-Ins/VST3/Dexed.vst3", state: dexed_epiano.state}
+  finger_bass:        {label: "핑거 베이스", sound: finger}
+  pick_bass:          {label: "피크 베이스", sound: pick}
+  acoustic_bass:      {label: "어쿠스틱 베이스", sound: acoustic}
+  synth_bass:         {label: "신스 베이스", sound: synth}
+  acoustic_guitar:    {label: "어쿠스틱 기타", sound: acoustic}
+  nylon_guitar:       {label: "나일론 기타", sound: nylon}
+  clean_guitar:       {label: "클린 일렉 기타", sound: clean}
+  muted_guitar:       {label: "뮤트 기타", sound: muted}
+  crunch_guitar:      {label: "크런치 기타 (클린 + 드라이브·캐비닛)", sound: clean, fx: crunch, fallback: overdrive}
+  distortion_guitar:  {label: "디스토션 기타 (클린 + 디스토션·캐비닛)", sound: clean, fx: distortion, fallback: distortion}
+  orchestral_strings: {label: "현악 합주", sound: ensemble}
+  slow_strings:       {label: "느린 현악", sound: slow}
+  vital_pad:          {label: "Vital 신스 패드", sound: ensemble, tier: B, license: "Vital 무료판 약관", release: surge_pad,
+                       vst: "/Library/Audio/Plug-Ins/VST3/Vital.vst3", state: vital_pad.state}
+  surge_pad:          {label: "Surge XT 신스 패드", sound: ensemble, license: "GPL-3.0",
+                       vst: "~/Library/Audio/Plug-Ins/VST3/Surge XT.vst3", state: surge_pad.state}   # scripts/make_surge_pad.py
+  vsco_strings:       {label: "VSCO-2 현악 합주 (샘플)", sound: ensemble, license: "CC0-1.0",
+                       credit: "VSCO-2 Community Edition by Versilian Studios (CC0)",
+                       sfz: "models/sfz/vsco2_strings.sfz"}       # scripts/make_vsco_strings.py (samples: see its docstring)
+  standard_drums:     {label: "스탠다드 드럼", sound: standard}
+  room_drums:         {label: "룸 드럼", sound: room}
+  power_drums:        {label: "파워 드럼", sound: power}
+  electronic_drums:   {label: "일렉트로닉 드럼", sound: electronic}
+  tr808_drums:        {label: "808 드럼머신", sound: tr808}
+  brush_drums:        {label: "브러시 드럼", sound: brush}
+  orchestra_drums:    {label: "오케스트라 타악기", sound: orchestra}
+
+  # more gear for the per-part choice on screen (choices below)
+  jazz_guitar:        {label: "재즈 기타 (할로우바디, 어두운 클린)", sound: jazz}
+  chorus_guitar:      {label: "코러스 클린 기타 (맑고 넓게)", sound: clean, fx: chorus_clean, fallback: clean}
+  edge_guitar:        {label: "엣지 기타 (살짝 깨지는 밝은 톤)", sound: clean, fx: edge, fallback: overdrive}
+  highgain_guitar:    {label: "하이게인 기타 (메탈, 중역을 깎은 톤)", sound: clean, fx: high_gain, fallback: distortion}
+  fretless_bass:      {label: "프렛리스 베이스", sound: fretless}
+  slap_bass:          {label: "슬랩 베이스", sound: slap}
+  drive_bass:         {label: "드라이브 베이스 (피크 + 살짝 왜곡)", sound: pick, fx: bass_drive, fallback: pick}
+  jazz_drums:         {label: "재즈 드럼", sound: jazz}
+
+fx:
+  # drive, then a guitar-cabinet shape: no deep lows, no fizz above ~5 kHz, a little presence
+  # Neural Amp Modeler (MIT) is the amp when it is installed and a setting was saved; its capture files have their own
+  # licences, unchecked so far, so the amp is tier B until the capture used is recorded in docs/LICENSES.md.
+  crunch:     {drive_db: 22, low_cut_hz: 100, high_cut_hz: 5200, presence_hz: 2000, presence_db: 3.0, mid_hz: 900, mid_db: 5.0,     # mid-forward, clearly driven
+               plugin: "~/Library/Audio/Plug-Ins/VST3/NeuralAmpModeler.vst3", state: nam_crunch.state, tier: B, license: "NAM MIT; capture unchecked"}
+  distortion: {drive_db: 32, low_cut_hz: 80, high_cut_hz: 7000, presence_hz: 3600, presence_db: 6.0, mid_hz: 280, mid_db: 5.0,     # thick lows and a bright edge: reads as electric
+               plugin: "~/Library/Audio/Plug-Ins/VST3/NeuralAmpModeler.vst3", state: nam_distortion.state, tier: B, license: "NAM MIT; capture unchecked"}
+  # optional keys: mid_hz + mid_db (a cut or boost in the middle), chorus (true: a chorus pedal before the cabinet)
+  edge:         {drive_db: 8,  low_cut_hz: 90,  high_cut_hz: 8000, presence_hz: 3800, presence_db: 5.0, mid_hz: 1200, mid_db: -2.0}   # glassy
+  high_gain:    {drive_db: 36, low_cut_hz: 70,  high_cut_hz: 6500, presence_hz: 4200, presence_db: 6.0, mid_hz: 750, mid_db: -10.0}   # scooped
+  chorus_clean: {drive_db: 0,  low_cut_hz: 80,  high_cut_hz: 7500, presence_hz: 3500, presence_db: 1.5, chorus: true}
+  bass_drive:   {drive_db: 10, low_cut_hz: 40,  high_cut_hz: 3200, presence_hz: 900,  presence_db: 2.0}
+
+# What the user can pick per part on screen ("장르 추천" = the genre's own line-up above). Parts not listed here offer
+# the plain sounds of audio.SOUNDS.
+choices:
+  guitar: [acoustic_guitar, nylon_guitar, clean_guitar, chorus_guitar, jazz_guitar, muted_guitar, edge_guitar, crunch_guitar,
+           distortion_guitar, highgain_guitar]
+  bass:   [finger_bass, pick_bass, drive_bass, slap_bass, fretless_bass, acoustic_bass, synth_bass]
+  piano:  [grand_piano, electric_piano, rock_organ, dexed_epiano]
+  drums:  [standard_drums, room_drums, power_drums, jazz_drums, brush_drums, electronic_drums, tr808_drums]
+  strings: [orchestral_strings, slow_strings, vsco_strings, surge_pad, vital_pad]
+
+modes:
+  demo:    [A, B]
+  release: [A]
+
+sources:
+  - {name: "GeneralUser GS v2.0.3", use: "기본 악기 소리 (모든 대체의 기준)", tier: A, license: "GeneralUser GS License v2.0",
+     credit: "GeneralUser GS by S. Christian Collins"}
+  - {name: "가이드 보컬: 내장 합성 음성", use: "가이드 보컬", tier: A, license: "사용자 본인 녹음 · 앱 자체 합성",
+     credit: "WORLD vocoder (Masanori Morise), modified BSD"}
+  - {name: "가이드 보컬: 맥 시스템 음성 (Yuna)", use: "가이드 보컬 기본 목소리", tier: B, license: "Apple 시스템 음성 약관 (macOS)",
+     credit: "macOS speech voice"}
+  - {name: "AI 보컬 데모: YuE2", use: "노래 시안 (선택 기능)", tier: B, license: "모델 가중치 CC BY-NC 4.0",
+     credit: "YuE2 (MLX port)"}
+  - {name: "Salamander Grand Piano V3 (SF2)", use: "피아노", tier: A, license: "CC-BY-3.0",
+     credit: "Salamander Grand Piano by Alexander Holm (SF2 conversion: FreePats project), CC BY 3.0"}
+
+genres:
+  ballad:
+    parts: {melody: hum_vocal, piano: grand_piano, keys: grand_piano, bass: acoustic_bass, guitar: acoustic_guitar,
+            lead: clean_guitar, strings: vsco_strings, drums: room_drums}
+    sections:
+      chorus: {add: [strings]}
+  classical:
+    parts: {melody: violin_lead, piano: grand_piano, keys: grand_piano, bass: acoustic_bass, guitar: nylon_guitar,
+            lead: nylon_guitar, strings: orchestral_strings, drums: orchestra_drums}
+  rock:
+    parts: {melody: hum_vocal, piano: grand_piano, keys: bright_piano, bass: pick_bass, guitar: crunch_guitar,
+            lead: crunch_guitar, strings: orchestral_strings, drums: power_drums}
+    sections:
+      chorus: {guitar: distortion_guitar, add: [strings]}
+  dance:
+    parts: {melody: hum_vocal, piano: electric_piano, keys: electric_piano, bass: synth_bass, guitar: clean_guitar,
+            lead: clean_guitar, strings: vital_pad, drums: electronic_drums}
+    sections:
+      chorus: {add: [strings]}
+  kpop:
+    parts: {melody: hum_vocal, piano: electric_piano, keys: grand_piano, bass: synth_bass, guitar: muted_guitar,
+            lead: clean_guitar, strings: vital_pad, drums: electronic_drums}
+    sections:
+      chorus: {guitar: clean_guitar, add: [strings]}
+  jpop:
+    parts: {melody: hum_vocal, piano: grand_piano, keys: bright_piano, bass: pick_bass, guitar: crunch_guitar,
+            lead: distortion_guitar, strings: vsco_strings, drums: standard_drums}
+    sections:
+      chorus: {guitar: distortion_guitar, add: [strings]}
+  newage:
+    parts: {melody: piano_lead, piano: grand_piano, keys: grand_piano, bass: acoustic_bass, guitar: nylon_guitar,
+            lead: nylon_guitar, strings: slow_strings, drums: brush_drums}
+  hiphop:
+    parts: {melody: hum_vocal, piano: electric_piano, keys: electric_piano, bass: synth_bass, guitar: muted_guitar,
+            lead: clean_guitar, strings: vital_pad, drums: tr808_drums}
+    sections:
+      chorus: {add: [strings]}
+  piano_rock:
+    parts: {melody: hum_vocal, piano: grand_piano, keys: grand_piano, bass: pick_bass, guitar: crunch_guitar,
+            lead: distortion_guitar, strings: orchestral_strings, drums: power_drums}
+    sections:
+      chorus: {guitar: distortion_guitar, add: [strings]}
+  pop_punk:
+    parts: {melody: hum_vocal, piano: electric_piano, keys: bright_piano, bass: pick_bass, guitar: distortion_guitar,
+            lead: distortion_guitar, strings: orchestral_strings, drums: standard_drums}
+  hard_rock:
+    parts: {melody: hum_vocal, piano: rock_organ, keys: bright_piano, bass: pick_bass, guitar: distortion_guitar,
+            lead: distortion_guitar, strings: orchestral_strings, drums: power_drums}
+  emo_rock:
+    parts: {melody: hum_vocal, piano: grand_piano, keys: grand_piano, bass: finger_bass, guitar: clean_guitar,
+            lead: clean_guitar, strings: vital_pad, drums: room_drums}
+    sections:
+      chorus: {guitar: crunch_guitar, add: [strings]}
+  modern_rock:
+    parts: {melody: hum_vocal, piano: grand_piano, keys: grand_piano, bass: finger_bass, guitar: clean_guitar,
+            lead: clean_guitar, strings: vital_pad, drums: standard_drums}
+    sections:
+      chorus: {guitar: crunch_guitar, add: [strings]}

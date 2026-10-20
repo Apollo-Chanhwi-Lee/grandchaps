@@ -1,0 +1,661 @@
+/* 작곡메이트 - dark glass theme on the owner's palette sheet v3: a violet-tinged dark grey page, translucent glass panels over big genre-coloured lights,
+   neutral greys without a green cast; lime = the user's seed, teal = what the app made, orange = warning / substitution.
+   Lime and teal are for buttons, selected states, seed / app notes, the ambient glow, the hero and the cover only; panels, hairlines and help text stay grey. */
+:root {
+  color-scheme: dark;
+  /* neutrals (sheet v3): page / glass panel / element on a panel / hairline. The three glass values are real alpha whites, so the lights show through. */
+  --bg: #1C2235;                          /* page: a night-sky navy (user, 2026-10-13: the grey was "too black") */
+  --surface: rgba(255,255,255,.06);       /* section cards, panels (+ backdrop-filter: blur(16px) on .card) */
+  --surface-2: rgba(255,255,255,.09);     /* on a panel: tiles, chips, secondary buttons, ask boxes */
+  --border: rgba(255,255,255,.10);        /* hairline, only where needed */
+  /* the sheet's solid look-alikes over --bg: used inside color-mix(), for SVG fills, popups and as the fallback without backdrop-filter */
+  --surface-px: #272E44; --surface-2-px: #303852; --border-px: #3C4561;
+  /* text in three levels */
+  --fg: #E8ECE9;          /* headings, main text, button labels */
+  --fg-body: #B7C0BA;     /* explanations: help paragraphs, descriptions, quiet links */
+  --fg-muted: #8A948D;    /* labels, units, placeholders, disabled / inactive, tertiary */
+  /* accents */
+  --seed: #9BE15D;        /* user's seed melody, primary actions, selected state */
+  --ai: #4FD1C5;          /* made by the AI / the app */
+  --warn: #F5A35C;        /* warnings, substitutions, needs a fix */
+  /* derived from the neutrals only (mixes of grey with grey) */
+  --surface-3: rgba(255,255,255,.14);                                  /* pressed / hover */
+  --line-strong: color-mix(in srgb, var(--fg) 38%, var(--surface-px)); /* control border, grid bar lines (about 3:1 on a panel) */
+  --seed-ink: #14151C;                                                 /* dark text on lime / the lime-teal gradient */
+  /* tints below carry meaning (seed notes, app-made parts, warnings, selected state), they are not surfaces */
+  --seed-tint: color-mix(in srgb, var(--seed) 14%, var(--surface-px));
+  --seed-on: color-mix(in srgb, var(--seed) 10%, transparent);       /* selected choice: lime 10% over whatever is behind */
+  --ai-tint: color-mix(in srgb, var(--ai) 14%, var(--surface-px));
+  --warn-tint: color-mix(in srgb, var(--warn) 14%, var(--surface-px));
+  --grad: linear-gradient(90deg, var(--seed), var(--ai));            /* the seed grows into a song: brand mark, hero rule, progress, seed word */
+  --mid-k: 1;                                                        /* the third (mixed) light's strength: 0 on narrow screens */
+  --grad-btn: linear-gradient(135deg, var(--seed), var(--ai));       /* main buttons and the "on" instrument chips */
+  /* genre tile colours are set per tile below ([data-genre]); these two are the fallback for genres without a tile */
+  --g-fallback-a: var(--fg-muted); --g-fallback-b: var(--border);
+  /* type scale */
+  --fs-h1: clamp(32px, 4.8vw, 54px); --fs-h2: 24px; --fs-h3: 16px; --fs-body: 15px; --fs-small: 13px;
+  /* shape + space */
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-pill: 999px;
+  --gutter: 32px; --side-w: 220px; --player-h: 72px;
+  --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+/* the two light colours follow the chosen genre (app.js syncGlow sets them on :root); registered as colours so a change really eases over 0.6 s */
+@property --glow-a { syntax: "<color>"; inherits: true; initial-value: #9BE15D; }
+@property --glow-b { syntax: "<color>"; inherits: true; initial-value: #4FD1C5; }
+:root { transition: --glow-a .6s ease, --glow-b .6s ease; }
+/* no backdrop-filter: the panels fall back to the sheet's solid approximations */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --surface: #272E44; --surface-2: #303852; --border: #3C4561; --surface-3: #48526F; }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+body { margin: 0; position: relative; background: var(--bg); color: var(--fg); font: var(--fs-body)/1.6 var(--font); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+/* depth: three round lights (800 px, 22% at the centre, easing to 0) at the top of the page, centred behind the hero so the panels below catch only their softer
+   tails: --glow-a left, --glow-b right, their mix at the top centre (dropped on narrow screens, where two lights already cover the width). Glass panels show them through. */
+body::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 620px; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(circle 400px at 14% 150px, color-mix(in srgb, var(--glow-a) 22%, transparent), color-mix(in srgb, var(--glow-a) 11%, transparent) 40%, color-mix(in srgb, var(--glow-a) 3%, transparent) 70%, transparent),
+    radial-gradient(circle 400px at 86% 130px, color-mix(in srgb, var(--glow-b) 22%, transparent), color-mix(in srgb, var(--glow-b) 11%, transparent) 40%, color-mix(in srgb, var(--glow-b) 3%, transparent) 70%, transparent),
+    radial-gradient(circle 400px at 50% 40px, color-mix(in srgb, color-mix(in srgb, var(--glow-a), var(--glow-b)) calc(22% * var(--mid-k)), transparent), color-mix(in srgb, color-mix(in srgb, var(--glow-a), var(--glow-b)) calc(11% * var(--mid-k)), transparent) 40%, color-mix(in srgb, color-mix(in srgb, var(--glow-a), var(--glow-b)) calc(3% * var(--mid-k)), transparent) 70%, transparent); }
+@media (max-width: 860px) { :root { --mid-k: 0; } }
+a { color: var(--fg); text-decoration-color: var(--seed); text-underline-offset: 3px; }
+code { font-family: var(--mono); font-size: .9em; background: var(--surface-2); padding: 1px 6px; border-radius: 6px; }
+
+/* ---------- layout: sidebar + content ---------- */
+.app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+.side { position: sticky; top: 0; align-self: flex-start; height: 100vh; width: var(--side-w); flex: 0 0 var(--side-w);
+  background: transparent; padding: 28px 16px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
+.brand { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; padding: 0 8px; }
+/* the name in two lines: 그랜드챕스 (the band) large and bright, 작곡메이트 small and spaced under it */
+.brand-name {
+  display: flex; flex-direction: column; line-height: 1.05; }
+.brand-main {
+  font-size: 25px; font-weight: 900; letter-spacing: .03em; font-style: normal; background: linear-gradient(100deg, var(--seed) 0%, var(--ai) 60%, #8FB8FF 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 10px color-mix(in srgb, var(--ai) 35%, transparent)); }
+.brand-sub {
+  margin-top: 4px; font-size: 12.5px; font-weight: 600; letter-spacing: .42em; color: var(--fg-body); }
+.brand-dot { width: 20px; height: 20px; border-radius: 50% 6% 50% 6%; background: linear-gradient(135deg, var(--seed), var(--ai)); flex: none; }
+.side nav { display: flex; flex-direction: column; gap: 4px; }
+.side nav a { color: var(--fg-muted); text-decoration: none; font-weight: 600; padding: 10px 14px; border-radius: var(--r-sm); white-space: nowrap;
+  border-left: 3px solid transparent; transition: background .15s, color .15s; }
+.side nav a:hover { background: var(--surface-2); color: var(--fg); }
+.side nav a.done { color: var(--fg); }
+.side nav a.on { color: var(--fg); background: var(--seed-on); border-left-color: var(--seed); }
+.side nav a:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.side-note { margin: auto 0 0; padding: 0 14px; color: var(--fg-body); font-size: 12.5px; line-height: 1.6; }
+.content { flex: 1 1 auto; min-width: 0; padding: 0 var(--gutter) calc(var(--player-h) + 48px); }
+.hero, main { max-width: 980px; margin-left: auto; margin-right: auto; }
+.hero { margin-top: 28px; padding: 44px 8px 28px; position: relative;
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px 40px; align-items: center; }
+.hero::before { content: ""; position: absolute; left: 8px; top: 20px; width: 56px; height: 4px; border-radius: 2px; background: var(--grad); }
+.hero h1 { margin: 0; font-size: var(--fs-h1); line-height: 1.12; letter-spacing: -.04em; font-weight: 800; }
+.hero h1 .seed-word { color: var(--seed); background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p { margin: 18px 0 0; max-width: 460px; color: var(--fg-body); font-size: 15px; line-height: 1.65; }
+.hero-roll { display: block; width: 100%; max-width: 440px; height: auto; justify-self: end; }
+/* hero piano roll: the drawing is the still picture (every note visible); the loop is added only when motion is welcome */
+.hero-roll .roll-row { fill: var(--fg); opacity: .035; }
+.hero-roll .roll-beat { stroke: var(--fg); stroke-opacity: .10; stroke-width: 1; }
+.hero-roll .roll-note { transform-box: fill-box; }
+.hero-roll .seed { fill: var(--seed); transform-origin: center; }
+.hero-roll .ai { fill: var(--ai); transform-origin: left center; }
+.hero-roll .roll-head { stroke: var(--fg); stroke-width: 1.5; stroke-linecap: round; opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-roll .roll-note { animation-duration: 3s; animation-iteration-count: infinite; animation-timing-function: cubic-bezier(.3, .7, .3, 1); }
+  .hero-roll .roll-head { opacity: .35; animation: roll-head 3s linear infinite; }
+  .hero-roll .s1 { animation-name: roll-s1; } .hero-roll .s2 { animation-name: roll-s2; } .hero-roll .s3 { animation-name: roll-s3; } .hero-roll .s4 { animation-name: roll-s4; }
+  .hero-roll .t1 { animation-name: roll-t1; } .hero-roll .t2 { animation-name: roll-t2; } .hero-roll .t3 { animation-name: roll-t3; } .hero-roll .t4 { animation-name: roll-t4; }
+  .hero-roll .t5 { animation-name: roll-t5; } .hero-roll .t6 { animation-name: roll-t6; } .hero-roll .t7 { animation-name: roll-t7; } .hero-roll .t8 { animation-name: roll-t8; }
+  @keyframes roll-s1 { 0%, 4% { opacity: 0; transform: scale(.4); } 9% { opacity: 1; transform: scale(1.1); } 12%, 90% { opacity: 1; transform: scale(1); } 97%, 100% { opacity: 0; transform: scale(1); } }
+  @keyframes roll-s2 { 0%, 10% { opacity: 0; transform: scale(.4); } 15% { opacity: 1; transform: scale(1.1); } 18%, 90% { opacity: 1; transform: scale(1); } 97%, 100% { opacity: 0; transform: scale(1); } }
+  @keyframes roll-s3 { 0%, 16% { opacity: 0; transform: scale(.4); } 21% { opacity: 1; transform: scale(1.1); } 24%, 90% { opacity: 1; transform: scale(1); } 97%, 100% { opacity: 0; transform: scale(1); } }
+  @keyframes roll-s4 { 0%, 22% { opacity: 0; transform: scale(.4); } 27% { opacity: 1; transform: scale(1.1); } 30%, 90% { opacity: 1; transform: scale(1); } 97%, 100% { opacity: 0; transform: scale(1); } }
+  @keyframes roll-t5 { 0%, 30% { opacity: 1; transform: scaleX(0); } 40%, 90% { opacity: 1; transform: scaleX(1); } 97%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes roll-t1 { 0%, 36% { opacity: 1; transform: scaleX(0); } 46%, 90% { opacity: 1; transform: scaleX(1); } 97%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes roll-t6 { 0%, 42% { opacity: 1; transform: scaleX(0); } 52%, 90% { opacity: 1; transform: scaleX(1); } 97%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes roll-t2 { 0%, 48% { opacity: 1; transform: scaleX(0); } 58%, 90% { opacity: 1; transform: scaleX(1); } 97%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes roll-t3 { 0%, 54% { opacity: 1; transform: scaleX(0); } 64%, 90% { opacity: 1; transform: scaleX(1); } 97%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes roll-t7 { 0%, 60% { opacity: 1; transform: scaleX(0); } 70%, 90% { opacity: 1; transform: scaleX(1); } 97%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes roll-t4 { 0%, 66% { opacity: 1; transform: scaleX(0); } 76%, 90% { opacity: 1; transform: scaleX(1); } 97%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes roll-t8 { 0%, 72% { opacity: 1; transform: scaleX(0); } 82%, 90% { opacity: 1; transform: scaleX(1); } 97%, 100% { opacity: 0; transform: scaleX(1); } }
+  @keyframes roll-head { 0% { transform: translateX(0); } 90%, 100% { transform: translateX(320px); } }
+}
+main { padding: 8px 0 0; position: relative; }
+
+/* ---------- cards + type ---------- */
+/* one level of box: the section card (glass fill, no border). Everything inside is separated by space and small headings. */
+.card { background: var(--surface); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-radius: var(--r-lg); padding: 32px; margin: 20px 0; scroll-margin-top: 16px; }
+h2 { margin: 0 0 18px; font-size: var(--fs-h2); font-weight: 800; line-height: 1.25; letter-spacing: -.03em; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+h3 { margin: 32px 0 10px; font-size: var(--fs-h3); font-weight: 700; color: var(--fg); letter-spacing: -.01em; }
+summary h3, details h3 { margin: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 12px 0; }
+.status { color: var(--fg-muted); }
+.status b { color: var(--fg); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.help { color: var(--fg-body); font-size: var(--fs-small); }
+.help:has(+ .more) { margin-bottom: 2px; }
+.placeholder { color: var(--fg-muted); }
+.hidden { display: none; }
+label { color: var(--fg); }
+.error, .bad { color: var(--warn); } .good { color: var(--ai); }
+.error { padding: 10px 14px; border-radius: var(--r-sm); background: var(--warn-tint); border-left: 3px solid var(--warn); }
+.errlist { white-space: pre-line; }
+.tag { font-size: 12px; font-weight: 600; color: var(--fg-body); background: var(--surface-2); border: 1px solid var(--border);
+  padding: 2px 12px; border-radius: var(--r-pill); }
+.tag:empty { display: none; }
+/* .ask and .error keep a tint because they carry meaning (a question, a warning) */
+.ask { margin-top: 14px; padding: 16px 18px; border-radius: var(--r-md); background: var(--surface-2); }
+.ask p { margin: 4px 0; } .ask h3 { margin-top: 0; }
+
+/* ---------- controls: primary (lime, filled) / secondary (raised, outlined) / quiet (text only) ---------- */
+button, select, input, textarea { font: inherit; color: var(--fg); }
+button { background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: 9px 16px; cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s, filter .15s; }
+button:hover:not(:disabled) { background: var(--surface-3); border-color: var(--fg-muted); }
+button:active:not(:disabled) { transform: scale(.98); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.primary, button.primary:hover:not(:disabled) { background: var(--grad-btn); color: var(--seed-ink); border-color: var(--seed); font-weight: 700;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--seed) 30%, transparent); }
+button.primary:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 0 26px color-mix(in srgb, var(--seed) 42%, transparent); }
+button.primary:active:not(:disabled) { filter: brightness(.92); }
+/* quiet: stop, undo-like and back actions read as plain text until hovered */
+button[id*="-stop"], #btn-step-prev, #btn-clear, #btn-edit-cancel { background: transparent; border-color: transparent; color: var(--fg-body); }
+button[id*="-stop"]:hover:not(:disabled), #btn-step-prev:hover:not(:disabled), #btn-clear:hover:not(:disabled), #btn-edit-cancel:hover:not(:disabled) {
+  background: var(--surface-2); border-color: var(--line-strong); color: var(--fg); }
+/* selected choice (genre, instrument, melody entry mode) */
+button.on { background: var(--seed-on); border-color: var(--seed); color: var(--fg); font-weight: 700; box-shadow: inset 0 0 0 1px var(--seed); }
+button.on:hover:not(:disabled) { background: color-mix(in srgb, var(--seed) 16%, transparent); border-color: var(--seed); }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+input, select, textarea { background: var(--bg); border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: 9px 12px; min-width: 0; }
+input::placeholder, textarea::placeholder { color: var(--fg-muted); opacity: 1; }
+input:hover, select:hover, textarea:hover { border-color: var(--fg-muted); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--seed); box-shadow: 0 0 0 3px color-mix(in srgb, var(--seed) 28%, transparent); }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
+input[type="number"] { width: 90px; }
+input[type="checkbox"] { width: 18px; height: 18px; padding: 0; accent-color: var(--seed); vertical-align: middle; border-radius: 4px; }
+input[type="checkbox"]:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; box-shadow: none; }
+input[type="file"] { border-radius: var(--r-md); max-width: 100%; }
+input[type="file"]::file-selector-button { font: inherit; color: var(--fg); background: var(--surface-3); border: 0; border-radius: var(--r-sm);
+  padding: 6px 14px; margin-right: 12px; cursor: pointer; }
+select { appearance: none; padding-right: 34px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--fg-muted) 50%), linear-gradient(135deg, var(--fg-muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%; background-size: 5px 5px; background-repeat: no-repeat; }
+select option { background: var(--surface-px); color: var(--fg); }
+textarea { width: 100%; border-radius: var(--r-md); resize: vertical; }
+details { margin: 12px 0; }
+/* quiet by default: a small underlined text link, not a grey box */
+summary { cursor: pointer; display: inline-block; padding: 4px 0; background: none; border: 0; color: var(--fg-body); font-size: 13px; font-weight: 600;
+  list-style: none; user-select: none; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 5px; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "\25B8"; display: inline-block; margin-right: 8px; color: var(--fg-muted); transition: transform .15s; text-decoration: none; }
+details[open] > summary::before { transform: rotate(90deg); color: var(--fg); }
+summary:hover { color: var(--fg); text-decoration-color: var(--fg-body); }
+details[open] > summary { margin-bottom: 10px; color: var(--fg); }
+/* the four working panels of step 3 get a heading-sized summary so the card still has a clear outline without boxes */
+#practice-box > summary, #edit-box > summary, #band-box > summary, #yue-box > summary { font-size: 16px; font-weight: 700; color: var(--fg); text-decoration: none; padding: 8px 0; }
+#practice-box, #edit-box, #band-box, #yue-box { margin: 28px 0; }
+details.help { font-size: 14px; color: var(--fg-body); }
+/* "자세히": the rest of a help paragraph */
+details.more { margin: 0 0 12px; }
+details.more > p { margin: 6px 0 0; font-size: 13px; color: var(--fg-body); max-width: 70ch; }
+.quiet-links { margin: 18px 0 0; }
+.quiet-links > details { margin: 4px 0; }
+.sounds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px 16px; }
+.sounds-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.sounds-grid select { width: 100%; }
+
+/* ---------- melody pad ---------- */
+.pad { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; margin: 16px 0; }
+.pad button { padding: 14px 0; font-size: 20px; font-weight: 700; border-radius: var(--r-md); }
+.pad button small { display: block; font-size: 11px; font-weight: 400; color: var(--fg-muted); }
+.pad button:hover small { color: var(--fg); }
+.pad.small { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+.pad.small button { font-size: 13px; padding: 10px 8px; font-weight: 500; border-radius: var(--r-sm); }
+.sheet-page { background: #fff; margin: 0 auto 12px; max-width: 900px; box-shadow: 0 1px 5px rgba(0,0,0,.35); }
+.sheet-page svg { display: block; width: 100%; height: auto; }
+.input-sheet.engraved { background: transparent; }
+.tab-sheet:empty { display: none; }
+.tab-sheet svg { display: block; max-width: 100%; height: auto; }
+.melody .note { cursor: pointer; }
+.melody .note.sel { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 4px; }
+.melody { min-height: 56px; display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border-radius: var(--r-md); background: var(--bg); }
+.bar { display: flex; gap: 4px; padding: 4px 8px; border-left: 2px solid var(--seed); }
+.note { background: var(--seed-tint); border: 1px solid color-mix(in srgb, var(--seed) 45%, var(--surface-px)); border-radius: 8px; padding: 2px 8px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.note sub { color: var(--fg-body); font-weight: 400; }
+
+/* ---------- chords / trace / leadsheet ---------- */
+.chords { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px 28px; }
+.chord { padding: 4px 0; }
+.chord .sym { font-size: 22px; font-weight: 800; }
+.chord .rn { color: var(--ai); margin-left: 8px; font-family: var(--mono); font-size: 13px; }
+.chord p { margin: 6px 0; font-size: 13px; color: var(--fg-body); }
+.chord.changed { outline: 2px solid var(--ai); outline-offset: 6px; border-radius: var(--r-sm); }
+.trace { padding-left: 22px; margin: 0; color: var(--fg); } .trace li { margin: 5px 0; } .trace li::marker { color: var(--fg-muted); font-weight: 700; }
+.trace b { margin-right: 6px; color: var(--fg); }
+#leadsheet-input { width: 100%; font: 13px/1.5 var(--mono); }
+.leadsheet { overflow-x: auto; background: var(--bg); padding: 14px; border-radius: var(--r-md);
+  font: 13px/1.5 var(--mono); color: var(--fg); }
+
+/* ---------- sheet music: OSMD draws black notation, so keep a light paper panel ---------- */
+#sheet, #song-sheet, .input-sheet { overflow-x: auto; background: #fbfaf7; color: #111; border-radius: var(--r-md); margin-top: 12px; }
+#song-sheet { margin-top: 0; }
+.input-sheet { min-height: 0; }
+
+/* ---------- piano roll (SVG): the user's notes are the seed, so lime ---------- */
+.piano-roll { overflow-x: auto; border-radius: var(--r-md); margin: 12px 0; background: var(--bg); }
+.piano-roll svg { display: block; touch-action: none; cursor: crosshair; user-select: none; }
+.pr-row-white { fill: var(--surface-px); } .pr-row-black { fill: var(--bg); } .pr-row-key { fill: var(--surface-3); }
+.pr-grid { stroke: var(--border-px); stroke-width: 1; } .pr-bar { stroke: var(--fg-muted); stroke-width: 1.5; }
+.pr-note { fill: var(--seed); stroke: var(--bg); stroke-width: 1; rx: 4; }
+.pr-label { fill: var(--fg-muted); font-size: 10px; }
+
+/* ---------- style panel ---------- */
+.style-box > h3:first-child { margin-top: 0; }
+/* a checkbox + long sentence stays on one line instead of dropping the sentence below the box */
+label.row:has(> input[type="checkbox"]) { flex-wrap: nowrap; align-items: flex-start; gap: 10px; }
+label.row > input[type="checkbox"] { flex: none; margin-top: 3px; }
+.filebtn { display: inline-flex; gap: 12px; align-items: center; cursor: pointer; flex-wrap: wrap; }
+.filebtn input { max-width: 280px; }
+#instruments, #instruments-extra { gap: 10px; }
+/* instrument chips: off = grey outline only, on = the lime-teal gradient with dark ink (colour + weight, not colour alone) */
+#instruments button, #instruments-extra button { border-radius: var(--r-pill); padding: 8px 18px; background: transparent; border: 1px solid var(--line-strong); color: var(--fg-body); }
+#instruments button:hover:not(:disabled), #instruments-extra button:hover:not(:disabled) { background: transparent; border-color: var(--fg-body); color: var(--fg); }
+#instruments button.on, #instruments-extra button.on,
+#instruments button.on:hover:not(:disabled), #instruments-extra button.on:hover:not(:disabled) { background: var(--grad-btn); border-color: var(--seed); color: var(--seed-ink); font-weight: 700; box-shadow: none; }
+#instruments button.on:hover:not(:disabled), #instruments-extra button.on:hover:not(:disabled) { filter: brightness(1.08); }
+/* genre tiles: app.js makes one button per genre (data-genre). The tile body is the raised glass neutral; only the top band and its small
+   glow take the genre's colours (--g1 -> --g2), and the selected tile gets a border and a 24 px glow in --g1. */
+#genres { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 12px; margin: 16px 0 12px; align-items: stretch; }
+#genres button { --g1: var(--g-fallback-a); --g2: var(--g-fallback-b);
+  position: relative; overflow: hidden; min-height: 96px; padding: 26px 14px 12px; display: flex; align-items: flex-end; justify-content: flex-start; text-align: left;
+  font-size: 16px; font-weight: 700; letter-spacing: -.01em; border: 2px solid transparent; border-radius: var(--r-md); color: var(--fg);
+  /* the tile is the raised glass; a faint wash of its own colour sits under the band */
+  background: linear-gradient(180deg, color-mix(in srgb, var(--g1) 14%, transparent), transparent 72%), var(--surface-2);
+  transition: transform .15s, border-color .15s, box-shadow .15s; }
+#genres button::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 10px; background: linear-gradient(90deg, var(--g1), var(--g2));
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--g1) 30%, transparent); }
+#genres button::after { content: "\2713"; position: absolute; right: 12px; bottom: 10px; font-size: 18px; font-weight: 800; color: var(--fg); opacity: 0; transform: scale(.6); transition: opacity .15s, transform .15s; }
+#genres button:hover:not(:disabled) { transform: translateY(-2px); border-color: color-mix(in srgb, var(--g1) 45%, transparent); }
+#genres button.on, #genres button.on:hover:not(:disabled) { border-color: var(--g1); box-shadow: 0 0 24px color-mix(in srgb, var(--g1) 35%, transparent); }
+#genres button.on::after { opacity: 1; transform: scale(1); }
+#genres button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+/* the nine genres on screen, one colour pair each (palette sheet v2, sheet "장르 색"); unlisted genres keep the grey fallback */
+#genres button[data-genre="ballad"]     { --g1: #4FD1C5; --g2: #3B5BDB; }
+#genres button[data-genre="rock"]       { --g1: #FF5A4E; --g2: #FF9F43; }
+#genres button[data-genre="kpop"]       { --g1: #F472B6; --g2: #A855F7; }
+#genres button[data-genre="jpop"]       { --g1: #60A5FA; --g2: #22D3EE; }
+#genres button[data-genre="piano_rock"] { --g1: #FBBF24; --g2: #F97316; }
+#genres button[data-genre="pop_punk"]   { --g1: #FB7185; --g2: #FACC15; }
+#genres button[data-genre="hard_rock"]  { --g1: #DC2626; --g2: #7F1D1D; }
+#genres button[data-genre="emo_rock"]   { --g1: #A78BFA; --g2: #4FD1C5; }
+#genres button[data-genre="modern_rock"]{ --g1: #34D399; --g2: #3B82F6; }
+.srctag { font-size: 12px; color: var(--fg-muted); }
+.srctag.rec { color: var(--ai); font-weight: 700; }
+.rec-card { margin: 0; }
+.rec-card dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 10px 0; }
+.rec-card dt { color: var(--fg-muted); } .rec-card dd { margin: 0; font-weight: 600; }
+
+/* ---------- structure timeline: one block per section, width proportional to bars ----------
+   Colour follows who wrote the section: seed (lime, the user's melody), model (teal, solid), rule (teal, dashed + paler).
+   The script sets the source only on the inner .badge-seed / .badge-model / .badge-rule, so the block reads it with :has(). */
+.timeline { display: flex; width: 100%; max-width: 100%; gap: 4px; margin: 12px 0; overflow-x: auto; padding: 4px 2px; }
+/* flex-grow (set inline from the bar count) shares the card width proportionally, so gaps/borders never push the row out;
+   min-width keeps every block clickable on a phone, where the row then scrolls horizontally instead of overflowing the card */
+.tl { flex: 1 1 0%; min-width: 48px; padding: 10px 4px; overflow: hidden; border: 2px solid color-mix(in srgb, var(--ai) 55%, var(--surface-px)); border-radius: var(--r-sm);
+  display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; line-height: 1.25; text-align: center;
+  color: var(--fg); background: var(--ai-tint); }
+.tl:has(.badge-model) { border-color: var(--ai); background: color-mix(in srgb, var(--ai) 22%, var(--surface-px)); }
+.tl:has(.badge-rule) { border-style: dashed; }
+.tl:has(.badge-seed) { border-color: var(--seed); background: color-mix(in srgb, var(--seed) 20%, var(--surface-px)); }
+.tl:hover:not(:disabled) { filter: brightness(1.2); }
+.tl:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.tl.selected { outline: 2px solid var(--fg); outline-offset: 2px; }
+.tl .tl-name { font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl .tl-bars { color: var(--fg); font-size: 11px; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.badge { font-size: 11px; font-weight: 700; border-radius: var(--r-pill); padding: 0 8px; background: var(--bg); border: 1px solid var(--line-strong); color: var(--fg); white-space: nowrap; }
+.badge-seed { color: var(--seed); border-color: var(--seed); }
+.badge-model { color: var(--ai); border-color: var(--ai); }
+.badge-rule { color: var(--ai); border-color: var(--ai); border-style: dashed; }
+
+/* ---------- layout A (user's choice 2026-10-13): menu | create column | content ---------- */
+:root { --create-w: 0px; }       /* the YuE2 column became the fourth card (user decision 2026-10-13) */
+.create-col { position: sticky; top: 0; align-self: flex-start; height: 100vh; overflow-y: auto; width: var(--create-w); flex: 0 0 var(--create-w);
+  padding: 28px 16px calc(var(--player-h) + 80px); border-right: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 55%, transparent); }
+.create-col h2 { font-size: 18px; margin: 0 0 8px; }
+.create-col h2 small { color: var(--fg-muted); font-weight: 600; font-size: 12px; margin-left: 6px; }
+.create-col .row { flex-wrap: wrap; gap: 8px; }
+.create-col select, .create-col textarea, .create-col input[type="text"] { width: 100%; box-sizing: border-box; margin: 6px 0; }
+.create-col label { display: block; font-size: 13px; }
+.create-col #btn-yuesong { width: 100%; margin-top: 8px; }
+#yuesong-sections { list-style: none; margin: 6px 0; padding: 0; }      /* one row per section: name, then the two boxes */
+#yuesong-sections li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 6px 0; border-top: 1px solid var(--border); }
+#yuesong-sections li > span { flex: 1 1 100%; font-weight: 600; font-size: 13px; }
+#yuesong-sections label { display: inline-flex; align-items: center; gap: 4px; }
+#btn-yuesong-sections-reset { padding: 2px 8px; font-size: 12px; }
+#views { margin-bottom: 14px; }
+.view { padding: 32px var(--gutter); }
+.view.hidden { display: none; }
+body[data-view="library"] .content > :not(.view), body[data-view="queue"] .content > :not(.view), body[data-view="settings"] .content > :not(.view), body[data-view="practice"] .content > :not(.view) { display: none; }
+#lib-view-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+#lib-view-list button { display: block; width: 100%; text-align: left; padding: 12px; }
+#lib-view-list button small { display: block; color: var(--fg-muted); margin-top: 4px; }
+.content { min-width: 0; }
+/* The layout steps down with the window width: >= 1280 menu | create column | content; 980-1279 the menu folds to icons
+   (its words stay in aria-label and title); 640-979 the menu is a bar on top and the create column sits over the
+   content; < 640 one column with 16px sides (the last block of the responsive section). */
+@media (max-width: 1279px) {
+  :root { --side-w: 72px; }
+  .side { padding: 28px 8px; align-items: stretch; }
+  .side .lbl, .side .side-lib, .side .side-lib-title, .side .side-note { display: none; }
+  .brand { justify-content: center; padding: 0; }
+  .side nav a { padding: 10px 0; text-align: center; font-size: 17px; }
+}
+@media (max-width: 979px) {
+  :root { --side-w: 0px; --gutter: 16px; }
+  .app { flex-direction: column; flex-wrap: nowrap; }
+  .side { position: sticky; top: 0; z-index: 40; width: 100%; flex: none; height: auto; flex-direction: row; align-items: center; gap: 12px;
+    padding: 10px var(--gutter); border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--bg) 92%, transparent);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); overflow: hidden; }
+  .side .lbl { display: inline; }
+  .brand { font-size: 16px; white-space: nowrap; flex: none; }
+  .side nav { flex-direction: row; gap: 4px; overflow-x: auto; flex: 0 1 auto; min-width: 0; scrollbar-width: none; }
+  .side nav a { padding: 7px 12px; font-size: 14px; border-left: 0; border-bottom: 3px solid transparent; }
+  .side nav a.on { border-bottom-color: var(--seed); }
+  #views { margin-bottom: 0; }
+  .create-col { position: static; height: auto; overflow: visible; width: auto; flex: 1 1 100%; border-right: 0; border-bottom: 1px solid var(--border);
+    padding: 20px var(--gutter) 16px; }
+  .content { padding-bottom: calc(var(--player-h) * 2 + 48px); }   /* room to scroll clear of the library bar and the player bar */
+}
+
+/* ---------- library: the list in the side menu and its own player (YuE2 songs) ---------- */
+.side-lib { margin-top: 18px; }
+.side-lib-title { font-size: 12px; color: var(--fg-muted); margin-bottom: 6px; }
+#lib-list { max-height: 34vh; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+#lib-list button { display: block; width: 100%; text-align: left; margin: 0 0 4px; padding: 6px 8px; font-size: 12px; background: transparent; }
+#lib-list button small { display: block; color: var(--fg-muted); }
+#lib-list button.on { outline: 1px solid var(--seed); color: var(--seed); }
+/* keyboard focus as on the menu links; in the scrolling list the ring is drawn inside, where it is not clipped */
+#lib-list button:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
+#lib-view-list button:focus-visible, .create-col button:focus-visible, .libbar button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.libbar { position: fixed; left: calc(var(--side-w) + var(--create-w)); right: 0; bottom: var(--player-h); z-index: 49; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  padding: 8px var(--gutter); background: color-mix(in srgb, var(--surface-px) 92%, transparent);   /* starts right of the create column, which stays usable */
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-top: 1px solid var(--line-strong); }
+.libbar.hidden { display: none; }
+.libbar audio { flex: 1 1 260px; height: 34px; }
+.libbar #lib-volume { width: 110px; }
+.libbar pre { flex: 1 1 100%; max-height: 30vh; overflow: auto; margin: 0; white-space: pre-wrap; color: var(--fg-body); font: inherit; }
+@media (max-width: 979px) { .libbar { left: 0; } }      /* the create column is no longer beside the content: full width */
+
+/* ---------- bottom now-playing bar ---------- */
+.playerbar { position: fixed; left: calc(var(--side-w) + var(--create-w)); right: 0; bottom: 0; z-index: 50; height: var(--player-h);
+  display: flex; align-items: center; gap: 16px; padding: 0 var(--gutter);   /* like the library bar: the create column stays usable */
+  background: color-mix(in srgb, var(--surface-px) 88%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border-top: 1px solid var(--line-strong); box-shadow: 0 -8px 30px rgba(0,0,0,.45); }
+.playerbar.hidden { display: none; }
+@media (max-width: 979px) { .playerbar { left: 0; } }   /* the create column is above the content: full width */
+.pb-bar { flex: 0 1 220px; height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; }
+.pb-bar i { display: block; height: 100%; width: 0; background: var(--grad); }
+.pb-time { flex: none; font: 12px/1 var(--mono); color: var(--fg-muted); min-width: 86px; text-align: right; font-variant-numeric: tabular-nums; }
+.playerbar #pb-title { flex: 1 1 auto; min-width: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pb-eq { display: inline-flex; align-items: flex-end; gap: 3px; width: 28px; height: 24px; flex: none; }
+.pb-eq i { display: block; width: 5px; height: 100%; border-radius: 3px; background: var(--seed); transform-origin: bottom; transform: scaleY(.35); }
+.playerbar:not(.hidden) .pb-eq i { animation: pb-bounce 900ms ease-in-out infinite; }
+.pb-eq i:nth-child(2) { animation-delay: -300ms; } .pb-eq i:nth-child(3) { animation-delay: -600ms; }
+@keyframes pb-bounce { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+.playerbar .pb-stop { background: transparent; border-color: var(--seed); color: var(--seed); font-weight: 700; flex: none; }
+.playerbar .pb-stop:hover:not(:disabled) { background: var(--seed-tint); border-color: var(--seed); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .pb-eq i:nth-child(1) { transform: scaleY(.45); } .pb-eq i:nth-child(2) { transform: scaleY(.9); } .pb-eq i:nth-child(3) { transform: scaleY(.65); }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 860px) {
+  :root { --gutter: 16px; }
+  .app { flex-direction: column; }
+  .side { position: sticky; top: 0; z-index: 40; width: 100%; flex: none; height: auto; flex-direction: row; align-items: center; gap: 12px;
+    padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--bg) 92%, transparent);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); overflow: hidden; }
+  .brand { padding: 0; font-size: 16px; white-space: nowrap; flex: none; }
+  .side nav { flex-direction: row; gap: 4px; overflow-x: auto; flex: 1 1 auto; min-width: 0; scrollbar-width: none; }
+  .side nav::-webkit-scrollbar { display: none; }
+  .side nav a { padding: 7px 14px; font-size: 14px; border-left: 0; border-bottom: 3px solid transparent; }
+  .side nav a.on { border-bottom-color: var(--seed); }
+  .side-note { display: none; }
+  .content { width: 100%; padding-top: 0; }
+  .hero { margin-top: 8px; padding: 36px 4px 20px; }
+  .hero::before { left: 4px; top: 12px; }
+  .card { padding: 22px 16px; border-radius: var(--r-md); margin: 16px 0; }
+  .playerbar { padding: 0 var(--gutter); }
+  .pad { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  html { scroll-padding-top: 72px; } .card { scroll-margin-top: 72px; }
+}
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-roll { justify-self: start; max-width: 420px; }
+  :root { --fs-h2: 22px; }
+}
+@media (max-width: 480px) {
+  #genres { grid-template-columns: repeat(2, 1fr); }
+  .pad.small { grid-template-columns: repeat(2, 1fr); }
+  .row > button { flex: 1 1 auto; }
+  .row > input[style] { min-width: 0 !important; width: 100%; }
+  .rec-card dl { grid-template-columns: 1fr; }
+}
+@media (max-width: 639px) {      /* one column: 16px sides, nothing wider than the window, the bars wrap to two lines */
+  :root { --gutter: 16px; --player-h: 104px; }
+  .app { max-width: 100vw; overflow-x: clip; }
+  .side { flex-wrap: wrap; row-gap: 6px; }
+  .brand .lbl { display: none; }
+  .side nav { flex: 1 1 0; }
+  .side nav + .side-lib-title + nav { flex: 1 1 100%; }
+  .create-col, .content { padding-left: 16px; padding-right: 16px; }
+  .playerbar { flex-wrap: wrap; align-content: center; gap: 8px 12px; padding: 8px var(--gutter); }
+  .playerbar #pb-title { flex: 1 1 calc(100% - 40px); }
+  .pb-bar { flex: 1 1 auto; }
+  .pb-time { min-width: 0; }
+  .libbar { gap: 8px 6px; padding: 8px var(--gutter); }
+  .libbar audio { flex: 1 1 100%; }
+  .libbar #lib-volume { width: 52px; }
+  .libbar button { padding: 6px 10px; }
+}
+
+/* genre traits panel */
+.genre-notes { display: grid; gap: 16px; margin-top: 10px; }
+.genre-note { padding: 2px 0; }
+.genre-note b { font-size: 13px; }
+.genre-note p { margin: 4px 0 0; font-size: 13px; color: var(--fg-body); }
+.genre-note .kit { color: var(--fg-muted); }
+
+/* uploaded score comparison */
+.voice-box { margin: 14px 0; }
+.voice-box p { margin: 0 0 6px; font-size: 13px; }
+
+/* part editor grid: the app's parts are teal, the selected note is plain text colour */
+.edit-grid { overflow: auto; max-height: 420px; border-radius: var(--r-sm); background: var(--bg); margin: 8px 0; }
+.edit-grid svg { display: block; }
+.edit-grid .eg-row-white { fill: var(--surface-px); } .edit-grid .eg-row-black { fill: var(--bg); }
+.edit-grid .eg-line-bar { stroke: var(--fg-muted); } .edit-grid .eg-line-beat { stroke: var(--line-strong); } .edit-grid .eg-line-sub { stroke: var(--border-px); }
+.edit-grid .eg-note { fill: var(--ai); stroke: var(--bg); }
+.edit-grid .eg-note.sel { fill: var(--fg); }
+.edit-grid .eg-note.over { fill: var(--fg-muted); }
+.edit-grid .eg-ring { fill: var(--line-strong); opacity: .8; }
+.edit-grid .eg-label { fill: var(--fg-muted); font: 10px var(--mono, monospace); }
+
+/* one step per page: the tabs in the site header are the only visible step indicator.
+   The in-body #stepper stays in the DOM (the script marks it and scrolls to it at every step change) but is clipped away,
+   not display:none, so scrollIntoView still has a box to scroll to; its buttons are also tabindex=-1 and aria-hidden in the HTML. */
+.stepper { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; list-style: none; }
+.start-choice { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; }
+.start-choice > span { color: var(--fg-body); }
+.step-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 16px 0 40px; }
+/* conversation mode: the form's first two steps are put away, the result cards (step 3) stay */
+body.chat-mode main > [data-step="1"], body.chat-mode main > [data-step="2"] { display: none !important; }
+body:not(.chat-mode) #chat-card { display: none; }
+.mode-tabs { display: flex; gap: 8px; margin: 0 0 12px; }
+.mode-tabs button.on { background: var(--seed); color: var(--bg); border-color: var(--seed); }
+.chat-log { list-style: none; margin: 8px 0 12px; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 46vh; overflow-y: auto; }
+.chat-log li { max-width: 80%; padding: 8px 12px; border-radius: 12px; white-space: pre-wrap; line-height: 1.5; }
+.chat-log li.chat-me { align-self: flex-end; background: color-mix(in srgb, var(--seed) 22%, var(--surface-2)); color: var(--fg); }
+.chat-log li.chat-app { align-self: flex-start; background: var(--surface-2); color: var(--fg-body); }
+main[data-step="1"] > [data-step]:not([data-step="1"]) { display: none !important; }
+main[data-step="2"] > [data-step]:not([data-step="2"]) { display: none !important; }
+main[data-step="3"] > [data-step]:not([data-step="3"]) { display: none !important; }
+main[data-step="4"] > [data-step]:not([data-step="4"]) { display: none !important; }
+main[data-start="score"] > [data-start]:not([data-start="score"]) { display: none !important; }
+main[data-start="type"] > [data-start]:not([data-start="type"]) { display: none !important; }
+main[data-start="sheet"] > [data-start]:not([data-start="sheet"]) { display: none !important; }
+main[data-start="hum"] > [data-start]:not([data-start="hum"]) { display: none !important; }
+.release-switch { display: block; margin: 12px 0 4px; font-size: 13px; }
+.credits { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: var(--fg-body); }
+.credits li { margin: 3px 0; }
+/* instrument substitution notice (plugin missing -> default sound used) */
+#audio-notes { margin: 8px 0; padding: 10px 14px; border-radius: var(--r-sm); background: var(--warn-tint); border-left: 3px solid var(--warn); color: var(--warn); }
+/* ---------- song cover (drawn by app.js drawCover on a canvas; the PNG button saves the same canvas) ---------- */
+.song-cover { display: block; width: min(100%, 300px); aspect-ratio: 1; height: auto; border-radius: var(--r-lg); margin: 0 0 22px; background: var(--surface-2);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--glow-a) 28%, transparent), 0 8px 30px rgba(0,0,0,.4); }
+@media (min-width: 700px) {      /* wide: the cover sits left of the title, the sentence and the first buttons; the practice panel starts below it */
+  .song-cover { float: left; width: 280px; margin: 0 32px 16px 0; }
+  #practice-box { clear: both; }
+}
+
+/* paper stays paper: no lights, no glass on print */
+@media print {
+  body::before { display: none; }
+  .card, .playerbar { background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+}
+/* make step: a ring while a making request runs (a still ring under reduced motion; the words say the same) */
+.make-busy { display: flex; align-items: center; gap: 10px; margin: 14px 0 0; color: var(--fg); font-size: 14px; }
+.make-busy.hidden { display: none; }
+.spinner { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--seed); border-right-color: var(--ai); }
+@media (prefers-reduced-motion: no-preference) { .spinner { animation: spin .8s linear infinite; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* the open question's answers as buttons, right under the conversation */
+.chat-choices { flex-wrap: wrap; gap: 8px; margin: 4px 0 10px; }
+.chat-choices.hidden { display: none; }
+.chat-choices button { border-color: var(--seed); color: var(--seed); background: var(--seed-on); font-weight: 700; }
+
+/* ---------- the song's route map (#song-route): a station per section on one line, the dot follows the playback ---------- */
+.route { display: flow-root; margin: 12px 0 8px; }     /* beside the floated cover, not under it */
+.route-track { position: relative; height: 76px; margin: 0 28px; }       /* inset so the first and last names fit */
+.route-line { position: absolute; left: 0; top: 32px; width: 100%; height: 12px; overflow: visible; }
+.route-line line { stroke-width: 6; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.route-stop { position: absolute; top: 30px; transform: translateX(-50%); padding: 22px 2px 0; border: 0; background: transparent;
+  color: var(--fg-body); font-size: 12px; line-height: 1.2; white-space: nowrap; cursor: pointer; }
+.route-stop::before { content: ""; position: absolute; top: 0; left: 50%; width: 16px; height: 16px; margin-left: -8px; box-sizing: border-box;
+  border-radius: 50%; background: var(--bg); border: 3px solid var(--fg); }
+.route-stop.up { top: -6px; padding: 0 2px 22px; }                       /* every other name above the line: short sections stay readable */
+.route-stop.up::before { top: auto; bottom: -16px; }
+.route-stop.mine::before { border-color: var(--seed); }
+.route-stop:hover, .route-stop:focus-visible { color: var(--fg); }
+.route-stop:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 4px; }
+.route-dot { position: absolute; top: 38px; left: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%;
+  background: var(--fg); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 25%, transparent); pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { .route-dot { transition: left .2s linear; } }
+.route-key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; color: var(--fg-muted); font-size: 12px; }
+.route-key span::before { content: ""; display: inline-block; width: 16px; height: 4px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.route-key .k-seed::before { background: var(--seed); } .route-key .k-ai::before { background: var(--ai); } .route-key .k-rule::before { background: var(--line-strong); }
+
+/* ---------- the part lines over the library bar (#lib-lines): one line per part, my part dimmed and dashed ---------- */
+.lib-lines { list-style: none; margin: 0; padding: 0; flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }   /* three short rows */
+.lib-lines li { display: flex; align-items: center; gap: 8px; font-size: 11px; line-height: 12px; color: var(--fg-body); }
+.lib-lines b { flex: 0 0 3.2em; font-weight: 600; }
+.lib-lines .line { flex: 1 1 auto; height: 0; border-top: 4px solid var(--line); border-radius: 2px; }
+.lib-lines .line-tag { flex: 0 0 auto; min-width: 3.5em; color: var(--line); font-weight: 700; }
+.lib-lines [data-part="vocal"] { --line: var(--seed); }
+.lib-lines [data-part="guitar"] { --line: var(--ai); }
+.lib-lines [data-part="bass"] { --line: var(--warn); }
+.lib-lines [data-part="keys"] { --line: color-mix(in srgb, var(--seed) 50%, var(--ai)); }
+.lib-lines [data-part="drums"] { --line: var(--fg-body); }
+.lib-lines li.mine .line { border-top-style: dashed; opacity: .45; }
+.lib-lines li.mine .line-tag { color: var(--fg); }
+
+/* ---------- a short rise into view: the finished first part and its new library card ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: rise 300ms cubic-bezier(.2,.8,.2,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+}
+
+/* ---------- day / night: the light palette (#btn-theme sets data-theme="light"; the dark one above is the default) ---------- */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #F5F6F8; --surface: rgba(20,22,28,.05); --surface-2: rgba(20,22,28,.08); --border: rgba(20,22,28,.12);
+  --surface-px: #FFFFFF; --surface-2-px: #EEF0F3; --border-px: #D5D9DF; --surface-3: rgba(20,22,28,.12);
+  --fg: #15171B; --fg-body: #3E444C; --fg-muted: #5E666F;
+  --seed: #3F8A12; --ai: #0F7F75; --warn: #B0560A; --seed-ink: #FFFFFF;
+}
+.theme-btn { display: flex; align-items: center; gap: 6px; width: 100%; margin: 0 0 14px; padding: 8px 14px; border: 1px solid var(--border);
+  border-radius: var(--r-sm); background: transparent; color: var(--fg-muted); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.theme-btn:hover { background: var(--surface-2); color: var(--fg); }
+.theme-btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+@media (max-width: 1279px) { .theme-btn { justify-content: center; padding: 8px 0; } }
+@media (max-width: 979px) { .theme-btn { width: auto; flex: none; margin: 0; padding: 6px 10px; } }
+@media (max-width: 639px) { .theme-btn .lbl { display: none; } }      /* one column: the icon only, its name stays in aria-label and title */
+
+/* ---------- the four-step guide at the top of the create column, and the callout of what to know ---------- */
+.guide { margin: 0 0 12px; }
+.guide summary { cursor: pointer; font-weight: 700; font-size: 13px; color: var(--fg); }
+.guide-list { margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--fg-body); }
+.guide-list li { margin: 4px 0; }
+.callout { border-left: 3px solid var(--warn); background: var(--warn-tint); padding: 10px 12px; border-radius: var(--r-sm); font-size: 12.5px; color: var(--fg-body); }
+.callout b { color: var(--fg); }
+.callout ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* ---------- skip link: off screen until reached with Tab, then over the top left corner of the window (fixed: the page
+   scrolls itself to the current step on load, so a link at the top of the document would be out of sight) ---------- */
+.skip-link {
+  position: fixed; left: 16px; top: -60px; z-index: 100; padding: 8px 14px; border-radius: var(--r-sm);
+  background: var(--surface-px); color: var(--fg); font-weight: 700; text-decoration: none; border: 1px solid var(--line-strong); }
+.skip-link:focus {
+  top: 8px; outline: 2px solid var(--fg); outline-offset: 2px; }
+#main-content:focus, #page-top:focus { outline: none; }
+
+/* ---------- the flow's cards (3 song, 4 YuE2 audio, 5 part scores and practice): buttons in an even grid ---------- */
+.btn-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin: 12px 0; }
+.btn-grid > button { width: 100%; min-height: 44px; }
+#song .song-actions { clear: none; }
+#yue2-card h2 small, #practice-card h2 small { color: var(--fg-muted); font-size: 13px; font-weight: 600; margin-left: 6px; }
+#yue2-card select, #yue2-card textarea, #yue2-card input[type="text"] { box-sizing: border-box; margin: 6px 0; }
+#yue2-card textarea, #yue2-card input[type="text"] { width: 100%; }
+#yue2-card #btn-yuesong { min-width: 200px; }
+.yue2-take { margin-top: 12px; }
+.yue2-take audio { width: 100%; }
+.lyrics-view { white-space: pre-wrap; margin: 8px 0; padding: 10px 12px; border-radius: var(--r-sm); background: var(--surface-2);
+  color: var(--fg-body); font: inherit; max-height: 30vh; overflow: auto; }
+.lyrics-view.hidden { display: none; }
+#lib-practice { margin-top: 16px; }
+#lib-practice h3 { margin: 0 0 6px; font-size: var(--fs-h3); }
+#practice-box .row { gap: 8px 10px; }
+#yuesong-sections { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); column-gap: 20px; }   /* ten sections: a few short rows */
+.side nav a[data-jump].on { background: transparent; border-left-color: transparent; }   /* 4 and 5 are places inside step 3: only "3" is lit */
+
+/* ---------- the background notes (#bg-notes): behind everything, never in the way ---------- */
+.bg-notes {
+  position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+/* what the app understood from a message: a small line under it, like a chip */
+.chat-log li.chat-understood { align-self: flex-end; max-width: 100%; margin: -2px 0 2px; padding: 2px 10px; border-radius: var(--r-pill); font-size: 12px;
+  color: var(--ai); background: var(--ai-tint); list-style: none; }
+
+/* big text: the type size variables grow (the page's sizes all come from them) */
+:root[data-size="big"] { --fs-body: 18px; --fs-small: 15px; --fs-h2: 28px; --fs-h3: 19px; }
+:root[data-size="big"] .help, :root[data-size="big"] .callout, :root[data-size="big"] .guide-list { font-size: 16px; }
+:root[data-size="big"] button, :root[data-size="big"] select, :root[data-size="big"] input, :root[data-size="big"] textarea { font-size: 17px; }
+
+/* the way back to the conversation, on the song card (only while the conversation is the way in) */
+.back-chat { display: inline-block; margin: 0 0 10px; padding: 6px 12px; font-size: 13px; border-color: var(--seed); color: var(--seed); background: var(--seed-on); }
+body:not(.chat-mode) #btn-back-chat { display: none; }
+
+/* 2026-10-14: the YuE2 card keeps the plain choices in view; practice on a saved song has its own menu */
+#yuesong-advanced { margin: 12px 0; }
+#yuesong-advanced > summary { cursor: pointer; }
+#yue2-card .row > b { margin-right: 4px; }
+.go-practice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 20px; padding: 14px 16px; }
+.go-practice .help { flex: 1 1 220px; min-width: 0; }
+#practice-export { margin: 10px 0; }
+#practice-songs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 12px 0; padding: 0; list-style: none; }
+#practice-songs button { width: 100%; text-align: left; }
+#practice-songs button small { display: block; color: var(--fg-muted); }
+#btn-lib-full { margin: 8px 0; }

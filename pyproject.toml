@@ -1,0 +1,13 @@
+[project]
+name = "instmate"
+version = "0.1.0"
+description = "작곡메이트 (InstMate): 씨앗 멜로디를 2~4분 연주곡으로 키우는 AI 에이전트"
+requires-python = ">=3.11"
+dependencies = ["fastapi", "uvicorn[standard]", "music21", "mido"]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
