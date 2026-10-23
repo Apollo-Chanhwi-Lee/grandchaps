@@ -102,7 +102,9 @@ def main():
                 continuation = tok.decode(more)
                 # Do not retain an empty prompted section when the model starts its own.
                 base = prompt if continuation.strip() and not continuation.lstrip().startswith("%") else source
-                text, repaired = yuesong.repair_generated_rests(base + continuation, keep=source)
+                text, padded = yuesong.drop_meter_changes(base + continuation, keep=source)
+                text, repaired = yuesong.repair_generated_rests(text, keep=source)
+                repaired += padded
                 dropped = 0
                 try:
                     text, dropped = yuesong.repair_plan(text, keep=source)

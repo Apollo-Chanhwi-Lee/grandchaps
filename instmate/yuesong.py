@@ -294,6 +294,48 @@ def plan_score(abc: str, given_bars: int = 0, target_bars: int = 0) -> dict:
             "bars": info["bars"], "sections": info["sections"], "given_bars": given_bars}
 
 
+def drop_meter_changes(abc: str, keep: str = "") -> tuple[str, int]:
+    """(the score without the model's own meter changes, how many bars were padded).  The model sometimes writes `M:2/4` ... `M:4/4`
+    around one short bar inside a section; the reader takes one meter per score, so those lines are dropped and each short bar written
+    under such a change gets a closing rest up to the score's meter.  The header, the kept start and every full bar stay as they are."""
+    if abc.startswith(keep) is False:
+        raise YueSongError("입력 악보를 보존할 수 없는 생성 결과예요")
+    head = re.search(r"^M:(\d+)/(\d+)[ \t]*$", abc, re.M)
+    if not head:
+        return abc, 0
+    full = int(head[1]) * 16 // int(head[2])
+    out, padded, local = [], 0, False
+    seen_section = any(ln.startswith("% ") for ln in keep.splitlines())      # the kept start may already hold the first section
+    for n, line in enumerate(abc[len(keep):].splitlines(keepends=True)):
+        bare = line.strip()
+        if bare.startswith("% "):
+            seen_section = True
+        if seen_section and re.fullmatch(r"M:\d+/\d+", bare):
+            local = bare != head[0]                          # a change away from the header meter starts a padded stretch, a return ends it
+            continue
+        if local and "|" in line and not bare.startswith(("%", "V:", "M:", "L:", "Q:", "K:")):
+            bars = line.rstrip("\r\n").split("|")
+            for i, bar in enumerate(bars):
+                if not bar.strip() or yueimport.MULTI.fullmatch(bar.strip()):
+                    continue
+                tokens, pos = [], 0
+                while pos < len(bar.rstrip()):
+                    m = yueimport.TOKEN.match(bar, pos)
+                    if not m or m.end() == pos:
+                        break
+                    tokens.append(m)
+                    pos = m.end()
+                if pos != len(bar.rstrip()):
+                    continue
+                total = sum(int(m["len"] or 1) for m in tokens if m["letter"])
+                if 0 < total < full:
+                    bars[i] = bar.rstrip() + f"z{full - total}"
+                    padded += 1
+            line = "|".join(bars) + line[len(line.rstrip("\r\n")):]
+        out.append(line)
+    return keep + "".join(out), padded
+
+
 def repair_generated_rests(abc: str, keep: str = "") -> tuple[str, int]:
     """Fit rests in new model bars to the meter; never alter the prefix or pitched notes."""
     if keep and (not abc.startswith(keep) or not keep.endswith("\n")):
@@ -359,6 +401,15 @@ def repair_plan(abc: str, keep: str = "") -> tuple[str, int]:
             return (abc if dropped == 0 else text), dropped
         except yueimport.AbcError:
             continue
+    # a section that began inside `keep` (a chorus the user started) cannot be dropped whole: cut its broken tail, a block of bars at a time
+    starts = [i for i, ln in enumerate(lines) if ln.startswith("V: Vocal") and i >= floor and i > 0]
+    for end in reversed(starts):
+        text = "\n".join(lines[:end]) + "\n"
+        try:
+            yueimport.read(text)
+            return text, len([m for m in marks if m >= end]) + 1
+        except yueimport.AbcError:
+            continue
     if keep and not keep.endswith("V: Vocal\n"):               # an open start alone is no plan: the model wrote nothing that reads
         try:
             yueimport.read(keep)
@@ -381,6 +432,9 @@ def first_part(abc: str, given_bars: int = 0) -> str:
     return abc
 
 
+PLAN_TRIES = 3                      # the model's score is written again (seed + 100 each time) while it cannot be read
+
+
 def _run(prefix: str, style: str, words: str, seed: int, max_seconds: float, flags: list[str], progress, said: str, low_memory: bool = True):
     """(wav bytes, the score that was sung, the whole plan, the runner's JSON)."""
     import subprocess
@@ -395,7 +449,7 @@ def _run(prefix: str, style: str, words: str, seed: int, max_seconds: float, fla
         (work / "prefix.abc").write_text(prefix, encoding="utf-8")
         out = work / "song.wav"
         _cancel.clear()
-        for attempt in (0, 1):
+        for attempt in range(PLAN_TRIES):
             if progress:
                 progress(said + (" (악보를 다시 쓰는 중)" if attempt else ""))
             proc = subprocess.Popen(command({**req, "seed": seed + attempt * 100}, work, out) + flags, cwd=yue.model_dir(),
@@ -420,6 +474,18 @@ def _run(prefix: str, style: str, words: str, seed: int, max_seconds: float, fla
             proc = subprocess.CompletedProcess(proc.args, proc.returncode, stdout, stderr)
             if proc.returncode != 3 or "--no-continue" in flags:
                 break
+        if proc.returncode == 3 and "the plan cannot be used" in (proc.stderr or ""):
+            failed = out.with_suffix(".abc")
+            kept = ""
+            if failed.is_file():                      # kept for the maker: the score the model wrote last and could not be read
+                import os, shutil
+                dest = Path(os.environ.get("INSTMATE_DATA", ".")) / "last_failed_plan.abc"
+                try:
+                    shutil.copyfile(failed, dest); kept = f" 마지막으로 쓴 악보는 {dest}에 남겼어요."
+                except OSError:
+                    pass
+            why = (proc.stderr or "").rsplit("the plan cannot be used:", 1)[-1].strip().splitlines()[0][:120]
+            raise RuntimeError(f"YuE2가 쓴 악보를 읽을 수 없어서 {PLAN_TRIES}번 다시 썼지만 되지 않았어요 ({why}). 한 번 더 눌러 보세요.{kept}")
         if proc.returncode != 0 or not out.is_file():
             raise RuntimeError(f"YuE2 생성 실패: {(proc.stderr or proc.stdout or '').strip()[-300:]}")
         abc = out.with_suffix(".abc").read_text(encoding="utf-8")

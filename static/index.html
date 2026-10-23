@@ -71,7 +71,7 @@
   <p id="lib-full-note" class="help" aria-live="polite"></p>
   <div id="lib-full-ask" class="row hidden" role="group" aria-label="전곡 만들기 확인" aria-live="polite">
     <b id="lib-full-ask-text"></b>
-    <span class="help">3~4분 곡은 5~8분쯤 걸려요.</span>
+    <span class="help">3~4분 곡은 10~15분쯤 걸려요(Mac 사양에 따라 달라요).</span>
     <button id="btn-lib-full-yes" class="primary">예, 전곡 만들기</button>
     <button id="btn-lib-full-no">아니오</button>
   </div>
@@ -682,7 +682,7 @@
         <button id="btn-yuesong-adopt">이 곡의 악보를 불러오기</button>
         <div id="yuesong-ask" class="row hidden" role="group" aria-label="전곡 만들기 확인">
           <b id="yuesong-ask-text">이 곡으로 전곡을 만들까요?</b>
-          <span class="help">3~4분 곡은 5~8분쯤 걸려요.</span>
+          <span class="help">3~4분 곡은 10~15분쯤 걸려요(Mac 사양에 따라 달라요).</span>
           <button id="btn-yuesong-yes">예, 전곡 만들기</button>
           <button id="btn-yuesong-no">아니오</button>
         </div>
@@ -828,9 +828,12 @@
 </details>
 <ol id="chat-log" class="chat-log" aria-live="polite"></ol>
   <div id="chat-choices" class="row chat-choices hidden" role="group" aria-label="답 고르기"></div>
+  <p class="help">장르와 보컬은 아래 버튼을 누르면 바로 적용돼요.</p>
+  <div id="chat-genre-chips" class="row chat-choices" role="group" aria-label="장르 고르기"></div>
+  <div id="chat-voice-chips" class="row chat-choices" role="group" aria-label="보컬 고르기"></div>
   <form id="chat-form" class="row">
     <div class="row workspace-input-tools"><button type="button" class="chat-icon chat-hum" data-workspace-start="hum" title="허밍·녹음" aria-label="허밍·녹음"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><label class="filebtn workspace-attach chat-icon" title="악보 첨부"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5 12 19.5a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17.2a1.7 1.7 0 0 1-2.4-2.4L15 7"/></svg><span class="visually-hidden">악보 첨부</span><input type="file" id="chat-file" accept=".mid,.midi,.musicxml,.mxl,.xml,.pdf" aria-label="악보 첨부"></label><span id="workspace-file-name" class="help" aria-live="polite"></span></div>
-    <input id="chat-text" maxlength="1000" placeholder="예: 이 멜로디로 감성록 곡 만들어줘, 여성 보컬" style="flex:1; min-width:220px" aria-label="요청">
+    <input id="chat-text" maxlength="1000" placeholder="예: 감성록으로 바꿔줘 / 템포 100으로 해줘 (아래 장르를 눌러도 돼요)" style="flex:1; min-width:220px" aria-label="요청">
     <button id="chat-send" class="primary" type="submit">보내기</button>
   </form>
   <dialog id="workspace-options-dialog" aria-label="대화 옵션"><button type="button" id="workspace-options-close">닫기</button>

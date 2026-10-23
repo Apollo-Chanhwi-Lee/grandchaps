@@ -115,7 +115,7 @@ if (typeof document !== 'undefined') {
         if (keys.includes('genre') || keys.includes('tempo')) state.style = null;
       }
       syncStyleButtons();
-      renderVoiceButtons();
+      renderVoiceButtons(); renderChips();
       renderRequestSummary();
       const note = byId('workspace-changes');
       note.textContent = mode === 'undo' ? '도우미가 바꾼 설정을 되돌렸습니다. 입력 음표와 기존 음원은 그대로입니다.'
@@ -149,7 +149,7 @@ if (typeof document !== 'undefined') {
       commandMode = mode;
       byId('workspace-mode-create').setAttribute('aria-pressed', String(mode === 'create'));
       byId('workspace-mode-settings').setAttribute('aria-pressed', String(mode === 'settings'));
-      byId('chat-text').placeholder = mode === 'settings' ? '예: BPM을 110으로 바꿔줘 / 따뜻한 음색 추천해줘' : '예: 이 악보로 감성록 곡 만들어줘';
+      byId('chat-text').placeholder = mode === 'settings' ? '예: BPM을 110으로 바꿔줘 / 따뜻한 음색 추천해줘' : '예: 템포 100으로 바꿔줘 (장르·보컬은 위 버튼으로)';
     }
     function openDock(open = true) {
       const dialog = byId('workspace-assistant-dialog');
@@ -347,6 +347,23 @@ if (typeof document !== 'undefined') {
     byId('workspace-mode-settings').onclick = () => setCommandMode('settings');
     byId('workspace-chat-toggle').onclick = () => openDock(!byId('workspace-assistant-dialog').open);
     document.querySelectorAll('button[data-result-panel]').forEach(b => b.onclick = () => setResultPanel(b.dataset.resultPanel));
+    // every genre and voice as a button that applies at once (no model needed; pressing it is the user's own confirmation)
+    function renderChips() {
+      const cur = read();
+      const fill = (id, entries, picked, onPick) => {
+        const box = byId(id); if (!box) return; box.replaceChildren();
+        for (const [key, label] of entries) {
+          const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+          b.setAttribute('aria-pressed', String(picked === key));
+          b.onclick = () => { try { onPick(key, label); } catch (e) { say(e.message); } };
+          box.append(b);
+        }
+      };
+      fill('chat-genre-chips', Workspace.genres.map(g => [g, GENRES[g] || g]), cur.genre,
+        (g, label) => { apply({ genre: g }); say(label + ' 장르를 선택했습니다. 기존 음원은 바뀌지 않습니다.'); });
+      fill('chat-voice-chips', Object.entries(voiceLabels), cur.voice,
+        (v, label) => { apply({ voice: v }); say(label + ' 음색을 선택했습니다. 기존 음원은 바뀌지 않습니다.'); });
+    }
     byId('chat-file').addEventListener('change', () => { byId('workspace-file-name').textContent = byId('chat-file').files[0]?.name || ''; });
     byId('workspace-rebuild').textContent = '만들기 화면 열기';
     byId('workspace-rebuild').onclick = () => { goStep(2); byId('workspace-options-dialog').close(); };
@@ -406,7 +423,7 @@ if (typeof document !== 'undefined') {
     const playbackObserver = new ResizeObserver(fitPlayback);
     playbackBars.forEach(bar => playbackObserver.observe(bar));
     fitPlayback();
-    renderSeedSummary(); renderVoiceButtons(); refreshStatus();
+    renderSeedSummary(); renderVoiceButtons(); renderChips(); refreshStatus();
     window.workspaceController = { editor, readSettings: read, context, setView: chooseView, request, setCommandMode, refreshStatus,
       openYue() { chooseView('studio'); oldGoStep(3); setPage('result'); setResultPanel('yue'); } };
   })();

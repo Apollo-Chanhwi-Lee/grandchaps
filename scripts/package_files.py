@@ -16,7 +16,7 @@ EXACT = {
     "configs/explain.yaml", "configs/instruments.yaml",
     # the scripts the app starts as separate programs (instmate/yuesong.py RUNNER, vst.py WORKER, yueblend.py SEPARATE) and the setup tools
     "scripts/yue_continue.py", "scripts/vst_worker.py", "scripts/demucs_separate.py",
-    "scripts/install_mac.py", "scripts/build_mac_installer.py", "scripts/package_files.py",
+    "scripts/install_mac.py", "scripts/build_mac_installer.py", "scripts/package_files.py", "scripts/app_window.py",
     "docs/LICENSES.md", "docs/설치_Mac.md", "docs/GitHub_배포_준비.md",
     "tests/test_install_mac.py", "tests/test_mac_installer.py", "tests/test_modelsetup.py", "tests/test_package_closure.py",
     "tests/test_local_app_start.py",

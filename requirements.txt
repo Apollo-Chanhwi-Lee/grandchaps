@@ -15,4 +15,5 @@ mlx-lm
 huggingface_hub
 pyworld==0.3.5            # WORLD vocoder for the humming guide vocal (instmate/vocal.py)
 setuptools<81             # pyworld imports pkg_resources
+pywebview; sys_platform == "darwin"   # BSD-3-Clause: the app's own window instead of a browser tab (scripts/app_window.py)
 pedalboard==0.9.25        # GPL-3.0: plugin instruments for chosen parts (instmate/vst.py)

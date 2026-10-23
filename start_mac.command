@@ -54,5 +54,9 @@ for i in $(seq 1 90); do                       # open the browser only when the 
 done
 [ "$READY" = 1 ] || stop_here "앱이 90초 안에 켜지지 않았어요. 위 오류 문장을 알려 주세요."
 echo "작곡메이트가 켜졌어요: http://127.0.0.1:$PORT  (이 창을 닫으면 꺼져요)"
+# Its own app window when pywebview works (closing the window ends the app); the browser otherwise, or when INSTMATE_OPEN is set (tests).
+if [ -z "${INSTMATE_OPEN:-}" ] && [ -f scripts/app_window.py ] && "$PY" -c 'import webview' 2>/dev/null; then
+  "$PY" scripts/app_window.py "http://127.0.0.1:$PORT" && exit 0
+fi
 ${INSTMATE_OPEN:-open} "http://127.0.0.1:$PORT"
 wait $SERVER

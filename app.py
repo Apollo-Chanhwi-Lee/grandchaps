@@ -1942,7 +1942,9 @@ def workspace_turn(req: WorkspaceReq, key: str | None = None):
     else:
         planner = make_workspace_planner()
     if planner is None:
-        return {"reply": "언어 모델이 꺼져 있어 추천은 처리할 수 없습니다. BPM처럼 명확한 설정 수정은 가능합니다.",
+        from instmate.chat import GENRE_LABEL
+        return {"reply": "언어 모델이 꺼져 있어 긴 문장은 처리할 수 없어요. 장르 이름이나 BPM만 말하면 돼요. 예: \"감성록으로 바꿔줘\", \"템포 100\". "
+                         "장르: " + ", ".join(GENRE_LABEL.values()) + ".",
                 "patch": {}, "confirmation_required": False, "source": "unavailable"}
     # Reserve shared model capacity atomically, but keep the job mutex available to cancel/status/start requests.
     with _jobs_lock:

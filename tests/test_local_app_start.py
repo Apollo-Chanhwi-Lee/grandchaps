@@ -171,3 +171,57 @@ def test_the_normal_start_launches_a_loopback_only_server_and_calls_the_opener(t
     while time.time() < end and subprocess.run(["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"], capture_output=True, text=True).stdout:
         time.sleep(0.2)
     assert subprocess.run(["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"], capture_output=True, text=True).stdout == "", "the port stayed open"
+
+
+def window_case(tmp_path, has_webview, window_rc=0):
+    """start_mac.command with INSTMATE_OPEN unset, a stand-in Python (the server is a plain http.server) and a recording `open`."""
+    app = app_dir(tmp_path)
+    (app / "scripts" / "app_window.py").write_text("# stand-in\n", encoding="utf-8")
+    log = tmp_path / "calls.txt"
+    py = tmp_path / "fakepy.sh"
+    py.write_text(f'''#!/bin/sh
+case "$1" in
+  -c) echo "probe $2" >> "{log}"; {"exit 0" if has_webview else "exit 1"};;
+  scripts/app_window.py) echo "window $2" >> "{log}"; exit {window_rc};;
+  app.py) exec "{sys.executable}" -m http.server "$INSTMATE_PORT" --bind 127.0.0.1;;
+esac
+''', encoding="utf-8")
+    py.chmod(py.stat().st_mode | stat.S_IXUSR)
+    bin_dir = tool_dir(tmp_path, open=f'echo "browser $1" >> "{log}"')
+    port = free_port()
+    env = {"PATH": str(bin_dir), "HOME": str(tmp_path), "INSTMATE_PORT": str(port), "INSTMATE_PYTHON": str(py)}
+    proc = subprocess.Popen(["/bin/zsh", str(app / "start_mac.command")], env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            stdin=subprocess.DEVNULL, cwd=str(tmp_path), start_new_session=True, text=True)
+    end = time.time() + 40
+    while time.time() < end and proc.poll() is None and "browser" not in (log.read_text() if log.exists() else ""):
+        time.sleep(0.3)                                  # the window case ends by itself; the browser case waits for the server, so it is stopped here
+    out = ""
+    if proc.poll() is None:
+        os.killpg(proc.pid, 15)
+    out, _ = proc.communicate(timeout=20)
+    return proc.returncode, out, log.read_text(encoding="utf-8") if log.exists() else "", port
+
+
+@needs
+def test_with_pywebview_the_app_opens_in_its_own_window_and_closing_it_ends_the_app(tmp_path):
+    code, out, calls, port = window_case(tmp_path, has_webview=True)
+    assert code == 0, out
+    assert f"window http://127.0.0.1:{port}" in calls and "browser" not in calls, calls
+    assert subprocess.run(["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"], capture_output=True, text=True).stdout == ""   # the server went with it
+
+
+@needs
+def test_without_pywebview_or_when_the_window_cannot_be_made_the_browser_opens_instead(tmp_path):
+    (tmp_path / "a").mkdir()
+    code, out, calls, port = window_case(tmp_path / "a", has_webview=False)
+    assert "window" not in calls and f"browser http://127.0.0.1:{port}" in calls, calls
+    (tmp_path / "b").mkdir()
+    code, out, calls, port = window_case(tmp_path / "b", has_webview=True, window_rc=2)           # the window script itself failed (exit 2)
+    assert f"window http://127.0.0.1:{port}" in calls and f"browser http://127.0.0.1:{port}" in calls, calls
+
+
+def test_the_app_window_script_opens_only_the_local_app_and_the_icon_file_exists():
+    for url in ("http://example.com/", "https://127.0.0.1:8000", "file:///etc/passwd", "http://127.0.0.1.evil.com:80", "http://127.0.0.1:8000@evil.com/", "http://127.0.0.1/"):
+        r = subprocess.run([sys.executable, "-I", str(ROOT / "scripts" / "app_window.py"), url], capture_output=True, text=True, timeout=30)
+        assert r.returncode == 2 and "local app" in r.stderr, (url, r.returncode, r.stderr)     # refused before any window is made
+    assert (ROOT / "static" / "mascot" / "eyes_open.png").is_file()

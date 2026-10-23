@@ -214,7 +214,9 @@ def _genre_command(text: str) -> dict | None:
     """"감성록으로 바꿔줘": a complete command naming exactly one genre.  The rules read the genre (longest name wins, so 감성록 is
     never 록), a proposal still waits for the user's confirmation.  Anything looser goes to the model."""
     from .chat import GENRES as WORDS, GENRE_LABEL, normalize
-    m = re.fullmatch(r"\s*(.+?)\s*(?:으로|로|를|을)?\s*(?:바꿔|변경해|설정해|맞춰|해)(?:\s*(?:줘요?|주세요))?\s*[.!]?\s*", text or "")
+    # "감성록", "감성록으로", "감성록 느낌", "이 멜로디로 감성록 곡 만들어줘", "감성록으로 바꿔줘": only the name is read, so any extra word falls through
+    m = re.fullmatch(r"\s*(?:이\s*멜로디(?:를|로)?\s*)?(.+?)\s*(?:으로|로|를|을)?\s*(?:느낌|스타일|장르)?\s*(?:으로|로)?\s*(?:곡\s*)?"
+                     r"(?:(?:바꿔|변경해|설정해|맞춰|만들어|해)(?:\s*(?:줘요?|주세요))?)?\s*[.!]?\s*", text or "")
     if not m:
         return None
     said = normalize(m.group(1))
