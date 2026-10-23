@@ -1,11 +1,11 @@
-# PACKAGE_NOTICE: private review copy of the locally installed app (route A, release 10)
+# PACKAGE_NOTICE: private review copy of the locally installed app (route A, release 11)
 
-This is the app that the single-file Mac installer carries: **test version 0.1.0**, published on GitHub Releases by the owner on 2026-10-20. It is a test version: it was not checked on a clean Mac, it is not signed, and the limits below apply.
+This is the app that the single-file Mac installer carries: **test version 0.1.1**, a newer build of the 0.1.0 test version published on GitHub Releases on 2026-10-20. It is a test version: it was not checked on a clean Mac, it is not signed, and the limits below apply.
 
 ## What it is
 - The Grandchaps songwriting helper (InstMate), installed and run **on the recipient's own Mac**. Flow: installer file -> first-run program setup -> a local server that answers on this Mac only (127.0.0.1) -> the browser opens the app -> the singing model is downloaded inside the app on the first run, after the recipient accepts its terms.
 - Generation runs on the recipient's Mac. Nothing here connects to the author's computer, a tunnel or a remote GPU.
-- Source: branch `e3-kv8-1017`, commit `ef23983`. Uncommitted files included from the worktree: LICENSE, app.py, configs/explain.yaml, docs/GitHub_배포_준비.md, docs/설치_Mac.md, instmate/chat.py, instmate/explain.py, instmate/modelsetup.py, instmate/workspace_assistant.py, scripts/build_mac_installer.py, scripts/install_mac.py, scripts/package_files.py, start_mac.command, static/app.js, static/index.html, static/workspace.js, tests/test_install_mac.py, tests/test_local_app_start.py, tests/test_mac_installer.py, tests/test_modelsetup.py, tests/test_package_closure.py.
+- Source: branch `e3-kv8-1017`, commit `5b3252d`. Uncommitted files included from the worktree: LICENSE, app.py, configs/explain.yaml, docs/GitHub_배포_준비.md, docs/설치_Mac.md, instmate/chat.py, instmate/explain.py, instmate/modelsetup.py, instmate/workspace_assistant.py, pyproject.toml, scripts/build_mac_installer.py, scripts/install_mac.py, scripts/package_files.py, start_mac.command, static/app.js, static/index.html, static/workspace.js, tests/test_install_mac.py, tests/test_local_app_start.py, tests/test_mac_installer.py, tests/test_modelsetup.py, tests/test_package_closure.py.
 - Supported: **macOS on Apple Silicon (arm64) only.** Windows, Intel Macs and Linux are not supported (the singing and composing models are MLX only). Python 3.11 or newer, or uv, must already exist.
 - A clean-machine installation, the real 4.5 GB model download and a full song generation were **not** verified. See the build report for what was actually run and what was stood in for.
 

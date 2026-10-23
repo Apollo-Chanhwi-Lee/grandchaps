@@ -442,3 +442,25 @@ def generate(sheet: LeadSheet | str, style: str = "female", genre: str | None = 
     return data, {"melody": "simplified", "register": register, "pitch_shift": shift,
                   "style": style, "label": STYLE[style]["label"], "score_seconds": round(length, 1), "full": full,
                   "sections": [s.name for s in part.sections], "elapsed_sec": round(time.time() - t0, 1)}
+
+
+def language_of(text: str | None) -> str:
+    """The sung language named in the style text: Korean unless the words are only kana or only Latin letters."""
+    t = text or ""
+    if any("\uac00" <= c <= "\ud7a3" for c in t):
+        return "Korean"
+    if any("\u3040" <= c <= "\u30ff" for c in t):
+        return "Japanese"
+    return "English" if any(c.isascii() and c.isalpha() for c in t) else "Korean"
+
+
+def tagged(text: str) -> str:
+    """YuE2 needs section tags: untagged words become one [Verse] per blank-line block, the last block a [Chorus] when there are several."""
+    text = text.strip()
+    if text.startswith("["):
+        return text + "\n"
+    blocks = [b.strip() for b in text.replace("\r", "").split("\n\n") if b.strip()]
+    tags = ["[Verse]"] * len(blocks)
+    if len(blocks) > 1:
+        tags[-1] = "[Chorus]"
+    return "\n\n".join(f"{t}\n{b}" for t, b in zip(tags, blocks)) + "\n"

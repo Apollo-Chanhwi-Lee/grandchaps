@@ -162,11 +162,12 @@ def align(voice: np.ndarray, sr: int, plans: list[dict], fade_s: float = 0.02) -
     return out / np.maximum(weights, 1e-9)
 
 
-def _take(asked: LeadSheet, genre: str | None, work: Path) -> Path:
+def _take(asked: LeadSheet, genre: str | None, work: Path, lyrics: str | None = None) -> Path:
     """YuE2 sings the asked sheet into work/take.wav."""
     st = yue.STYLE["female_high"]
     band = yue.GENRE_STYLE.get(genre or "", "band pop, piano, guitar, bass, drums")
-    req = {"style": f"English, {band}, {VOICE}, {asked.tempo} BPM", "lyrics": yue.lyrics(asked, st["syllable"]),
+    words = yue.tagged(lyrics) if lyrics and lyrics.strip() else yue.lyrics(asked, st["syllable"])
+    req = {"style": f"{yue.language_of(lyrics) if lyrics and lyrics.strip() else 'English'}, {band}, {VOICE}, {asked.tempo} BPM", "lyrics": words,
            "abc": yue.to_abc(asked, st["octave"]), "cot": "full", "seed": st["seed"], "cfg_scale": st["cfg"],
            "seconds": yue.seconds(asked)}
     (work / "lyrics.txt").write_text(req["lyrics"], encoding="utf-8")
@@ -198,7 +199,7 @@ def _pitch(voice: np.ndarray, sr: int) -> np.ndarray:
 
 
 def overlay(leadsheet: str, genre: str | None = None, instruments: list[str] | None = None, mode: str | None = None,
-            progress=None, take=_take, separate=_separate, full: bool = False) -> tuple[bytes, dict]:
+            progress=None, take=_take, separate=_separate, full: bool = False, lyrics: str | None = None) -> tuple[bytes, dict]:
     """(mastered WAV of the highlight with the AI voice on the app's band, info).  `take` / `separate` are replaced
     in tests; everything else is the real path."""
     import soundfile as sf
@@ -218,7 +219,7 @@ def overlay(leadsheet: str, genre: str | None = None, instruments: list[str] | N
     with tempfile.TemporaryDirectory(prefix="instmate_blend_") as tmp:
         work = Path(tmp)
         say(f"1/4 YuE2가 {yue.seconds(asked):.0f}초 분량을 부르는 중 (대략 그만큼 걸려요)")
-        take_path = take(asked, genre, work)
+        take_path = take(asked, genre, work, lyrics) if lyrics and lyrics.strip() else take(asked, genre, work)
         say("2/4 목소리만 분리하는 중")
         raw, sr = sf.read(separate(take_path, work), always_2d=True)
     voice = raw.mean(axis=1)

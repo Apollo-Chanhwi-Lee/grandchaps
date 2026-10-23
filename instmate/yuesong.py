@@ -200,15 +200,15 @@ def model_lyrics(full: bool = False, seconds: float = 120.0, extra=()) -> str:
 def words_for(lyrics: str | None, mode: str, full: bool, seconds: float, extra) -> str:
     """The lyrics file: the user's words, else the model's own (mode "model"), else "아"."""
     if lyrics and lyrics.strip():
-        return lyrics
+        return yue.tagged(lyrics)
     return (model_lyrics if mode == "model" else ah_lyrics)(full, seconds, extra)
 
 
-def style_text(genre: str | None, voice: str, tempo: int) -> str:
+def style_text(genre: str | None, voice: str, tempo: int, lyrics: str | None = None) -> str:
     if voice not in VOICE:
         raise YueSongError(f"목소리는 {', '.join(VOICE)} 중 하나여야 해요 (받은 값 {voice!r})")
     band = yue.GENRE_STYLE.get(genre or "", "band pop, piano, guitar, bass, drums")
-    return f"Korean, {band}, {VOICE[voice]}, {tempo} BPM"
+    return f"{yue.language_of(lyrics)}, {band}, {VOICE[voice]}, {tempo} BPM"
 
 
 def command(req: dict, work, out) -> list[str]:
@@ -460,7 +460,7 @@ def make(seed_sheet: LeadSheet | str, genre: str | None = None, voice: str = "fe
     flags = ["--given-bars", str(given)] + (["--plans", str(plans)] if continue_song else ["--no-continue"]) \
         + (["--cut", "first"] if part == "first" else [])
     t0 = time.time()
-    data, abc, whole, ran = _run(prefix, style_text(genre, voice, seed_sheet.tempo), words_for(lyrics, lyrics_mode, False, 120.0, extra), seed, max_seconds, flags,
+    data, abc, whole, ran = _run(prefix, style_text(genre, voice, seed_sheet.tempo, lyrics), words_for(lyrics, lyrics_mode, False, 120.0, extra), seed, max_seconds, flags,
                                  progress, "YuE2가 주어진 마디에 이어 곡을 쓰고 부르는 중", low_memory)
     sheet, ins, info = _info(abc, seed_sheet.genre, ran, t0)
     data, shifted = _voiced(data, voice, sheet.key, key_shift, low_memory)
@@ -529,7 +529,7 @@ def make_full(first_abc: str, genre: str | None = None, voice: str = "female", l
     want = min(MAX_BARS, limits(first.tempo, first.meter)["window_bars"], math.ceil(target_seconds / bar_s))
     words = lyrics if lyrics and lyrics.strip() else None
     t0 = time.time()
-    data, abc, _, ran = _run(first_abc, style_text(genre, voice, first.tempo), words_for(lyrics, lyrics_mode, True, target_seconds, extra), seed,
+    data, abc, _, ran = _run(first_abc, style_text(genre, voice, first.tempo, lyrics), words_for(lyrics, lyrics_mode, True, target_seconds, extra), seed,
                              min(WHOLE_SECONDS, target_seconds * 1.3 + 10), ["--plans", str(plans), "--target-bars", str(want)],
                              progress, "YuE2가 1절에 이어 곡 전체를 쓰고 부르는 중", low_memory)
     _, _, info = _info(abc, sheet_genre, ran, t0)

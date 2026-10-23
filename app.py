@@ -1284,6 +1284,7 @@ class YueOverlayReq(BaseModel):
     instruments: list[str] | None = None
     mode: Literal["demo", "release"] | None = None
     full: bool = False                                         # the whole song (up to 300 s) instead of the highlight
+    lyrics: str | None = Field(None, max_length=4000)          # typed words (any language); none = "la" syllables
 
 
 @app.post("/api/yue/overlay")
@@ -1314,7 +1315,7 @@ def yue_overlay(req: YueOverlayReq):
         try:
             _llm_unload()                                  # qwen out of memory before YuE2 loads (user, 2026-10-19)
             wav, info = yueblend.overlay(req.leadsheet, req.genre, req.instruments, req.mode, job["progress"].append,
-                                         full=req.full)
+                                         full=req.full, lyrics=req.lyrics)
             job["audio"], job["format"] = (audio.to_mp3(wav), "mp3") if audio.ffmpeg_path() else (wav, "wav")
             job["info"] = info
             job["status"] = "done"

@@ -2333,11 +2333,11 @@ let yueSongSource = null;
 let yueRunning = null;                       // { job, first } while a take is made: what "취소" stops and "다시" repeats
 // Boxes that change what is asked of YuE2: the model's own words, and parts added to the plan.  Only what was asked is sent.
 function yueExtras() {
-  const random = !!$("yuesong-random")?.checked;
+  const random = !!$("yuesong-random")?.checked && !$("yuesong-lyrics")?.value.trim(); // typed words win over random
   const extra = [["yue-add-chorus", "Chorus"], ["yue-add-bridge", "Bridge"], ["yue-add-outro", "Outro"]].filter(([id]) => $(id)?.checked).map(([, name]) => name);
   return { random, body: { ...(random ? { lyrics_mode: "model" } : {}), ...(extra.length ? { extra_sections: extra } : {}) } };
 }
-function syncRandomLyrics() { if ($("yuesong-lyrics")) $("yuesong-lyrics").disabled = !!$("yuesong-random")?.checked; }
+function syncRandomLyrics() { if ($("yuesong-lyrics")) $("yuesong-lyrics").disabled = false; }
 function showYueCancel(on) { for (const id of ["btn-yuesong-cancel", "btn-yuesong-redo"]) $(id)?.classList.toggle("hidden", !on); }
 async function cancelYue() {
   if (!yueRunning) return false;
@@ -3402,7 +3402,7 @@ async function makeOverlay(song, full, say) {
     return null;
   }
   say(`AI 보컬을 만들어 이 곡의 반주에 얹고 있어요 (${full ? "곡 전체" : "하이라이트"}, 몇 분 걸려요). AI 보컬: YuE2 (m-a-p)`);
-  const { job } = await api("/api/yue/overlay", { leadsheet: song.leadsheet, genre: song.genre || null, mode: currentMode(), full });
+  const { job } = await api("/api/yue/overlay", { leadsheet: song.leadsheet, genre: song.genre || null, mode: currentMode(), full, lyrics: $("yuesong-lyrics")?.value.trim() || null });
   let seen = 0;
   for (;;) {
     await sleep(3000);
